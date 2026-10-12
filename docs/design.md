@@ -1,0 +1,109 @@
+# REDagent design
+
+REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
+
+Status: **plan agreed 2026-10-12.** Next: phase C1, in the REDnode repo.
+
+## What it can do
+
+| Step | How | REDnode piece it relies on |
+|---|---|---|
+| Author a mod | Writes `rednode-app.json` and `mod.mjs`, or an HTML app, into the apps folder | Packages and manifests (overlay O3, O6a) |
+| Run it | The host picks up a new package; hot reload restarts a changed one in about a second | Hot reload (O6a) |
+| See what happened | Reads the mod log: everything a mod printed, crashes cut down to the line in the mod's own file | Mod log (O6a) |
+| Check against the game | Calls the game itself, for example to read V's money after a change | `api`, the generic game API (O6b) |
+| Know the game | Looks up game types, functions and REDnode's notes | Generated game API types and the game API reference |
+| See a window | Reads an overlay window's text, or looks at its image | The host's off-screen pages |
+| Fix and repeat | Edits the file; hot reload runs it again | Hot reload |
+
+| Not yet | Why |
+|---|---|
+| Tier 1 interceptors, declarative rules | Not built in REDnode yet (phases P4 and P3) |
+| Reacting to arbitrary game events | Only `OnGameAttached` and UI state today; hooking game functions is REDnode P2 work |
+| Live-editing redscript, CET Lua or archive mods | It can edit those files, but the game loads them only at start |
+| Seeing the game screen, pressing keys | It sees overlay windows, not the game's final frame. A frame capture needs native work (phase C4) |
+| Rebuilding REDnode's native plugin | Needs a game restart |
+
+## Facts that shape the design
+
+From Anthropic's Agent SDK docs, checked 2026-10-12:
+
+| Fact | Effect |
+|---|---|
+| "Unless previously approved, Anthropic does not allow third party developers to offer claude.ai login or rate limits for their products, including agents built on the Claude Agent SDK." | Each player enters their own Anthropic API key and pays per use. No key ships with the mod |
+| Use of the Agent SDK is governed by Anthropic's Commercial Terms, including in products for end users | It can ship inside a mod |
+| A product must keep its own branding and "not appear to be Claude Code or any Anthropic product"; "{YourAgentName} Powered by Claude" is allowed | The product is **REDagent**, "powered by Claude" |
+| The TypeScript Agent SDK runs a bundled native Claude Code binary as a separate process; `pathToClaudeCodeExecutable` and `spawnClaudeCodeProcess` control how it starts | Should work from a REDnode mod process. Electron is not covered by the docs: **unverified**, settled by a spike in C2 |
+| Custom tools in process (`createSdkMcpServer`, `tool`), MCP servers over HTTP, `PreToolUse` hooks that block a tool before any other check, `disallowedTools`, `settingSources: []`, a custom system prompt, streaming with `includePartialMessages` | Everything the design needs is supported |
+
+## Pieces
+
+| Piece | Repo | What it is |
+|---|---|---|
+| Kernel MCP server | REDnode | The overlay host serves REDnode's tools over MCP on localhost, protected by a token. One server, two clients: REDagent in the game, and Claude Code on the desktop |
+| Package permissions | REDnode | A package asks for powers in its manifest, for example `"permissions": ["logs", "apps", "capture", "files"]`. The player grants them once in the launcher. Today only apps built into the host have them |
+| REDagent package | REDagent | A REDnode package: a chat window (overlay app) and the agent (a Node mod in its own process), the briefing, and the settings for the key and the model |
+
+## The agent
+
+The **Claude Agent SDK**, with the plain Claude API and our own tools as the fallback if it cannot run inside a REDnode mod process.
+
+| | Agent SDK | Claude API with our own tools |
+|---|---|---|
+| File reading, editing, searching | Built in | We write them |
+| Long chats (context management), sessions | Built in | We build them |
+| Permissions and confirmations | Hooks and a permission callback | We build them |
+| Size and moving parts | A native binary as a second process; size to be measured | Small, in process |
+| Risk | Running inside Electron is unverified | Low |
+
+Locked down either way:
+
+| Rule | How |
+|---|---|
+| No shell | `disallowedTools: ["Bash"]` |
+| Files only in the apps folder | A `PreToolUse` hook denies any read or write outside it. Hooks run before every other check |
+| Every write is shown first | A diff in the chat window; nothing is written until the player confirms. Each version is backed up, for undo |
+| Game changes are confirmed | `api_call` asks before a call that may change the game, such as `GiveItem` |
+| Nothing from the player's PC | `settingSources: []`: no CLAUDE.md or settings from the machine |
+| Its own instructions | A custom system prompt, the briefing below |
+| The key | Entered once, stored encrypted with Electron's `safeStorage`, passed only to the agent process |
+
+Model: `claude-opus-5-5` by default, `claude-sonnet-5-5` as the cheaper choice. A cost meter shows what each chat has cost.
+
+## The briefing
+
+A system prompt for the REDnode world. Most of it is generated from REDnode's [Overlay apps guide](https://edgemodders.github.io/REDnode/overlay-apps.html), so it stays current and the guide is tested by use.
+
+| It covers | Source |
+|---|---|
+| What REDnode is: tiers, packages, manifests, hot reload, mod processes | Hand-written, in this repo |
+| How to write mods and apps: `rednode`, `game`, `ui`, `api`, the UI kit | Generated from the guide |
+| The game API rules: references, 64-bit values as strings, `game.instance` | Generated from the guide |
+| Its tools, and when to use which | Hand-written |
+| The safety rules | Hand-written |
+
+Game types are looked up on demand with `gameapi_lookup`, not carried in the prompt: there are 15,830 classes.
+
+## Tools
+
+| Tool | Gives | Phase |
+|---|---|---|
+| `logs` | Mod output: all, one mod, errors only | C1 |
+| `apps` | Installed apps and mods, their state and memory; open, close, restart | C1 |
+| `game_state` | What the game shows: menus, photo mode, scenes, the main menu, the overlay mode | C1 |
+| `perf` | The game's frame rate and the overlay's cost | C1 |
+| `gameapi_lookup` | Game types, functions, enum members and REDnode's notes | C1 |
+| `window_text`, `window_image` | An overlay window's text, or its image: the window's own pixels, before the plugin places it on screen | C1 |
+| `api_call` | A live game call. Calls that may change the game ask first | C1 |
+| Read, search, edit, write files | In the apps folder only, with a diff and confirmation for every write, and undo | C3 |
+
+## Phases
+
+Each phase ends with an in-game test, as in REDnode.
+
+| Phase | Builds | The test proves |
+|---|---|---|
+| **C1 Kernel MCP server** (REDnode repo) | The read-only tools on localhost with a token, and `api_call` with confirmation | From Claude Code on the desktop, while the game runs: "what's V's health?", "show the Mod log errors", "capture the Hello mod window" |
+| **C2 Chat in the game** | The REDagent package: a streaming chat window built with the UI kit, key setup, model choice, cost meter. Starts with a spike: the Agent SDK inside a mod process | Questions asked in the game get answers built from live tool calls |
+| **C3 Authoring** | Write tools with diff, confirmation and undo; package permissions in the launcher; the write, hot reload, read the log, fix loop | "Make a mod that warns me below 30% health" goes from request to a working mod in the game. "Fix the crash mod's Throw button" fixes it |
+| **C4 Polish** | Session history, prompt caching for cost, a capture of the game's frame (native), and what the tests teach | To be decided |
