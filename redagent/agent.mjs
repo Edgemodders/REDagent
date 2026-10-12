@@ -51,7 +51,7 @@ const settings = { model: MODELS[0].id, ...readSettings() };
 const saveSettings = () => writeFileSync(SETTINGS, JSON.stringify(settings, null, 2));
 
 let sessionId = null; // the chat's Claude Code session, resumed turn after turn
-let chatCost = 0;
+let chatCost = 0; // what this chat has cost: the SDK reports a running total per session
 let running = null; // AbortController of the turn in progress
 let nextConfirm = 1;
 const confirms = new Map(); // confirm id -> resolve(boolean)
@@ -258,10 +258,13 @@ async function ask(text) {
         const content = Array.isArray(m.message?.content) ? m.message.content : [];
         for (const b of content) if (b.type === 'tool_result') post({ type: 'tool-done', id: b.tool_use_id, error: !!b.is_error });
       } else if (m.type === 'result') {
-        const cost = m.total_cost_usd ?? 0;
-        chatCost += cost;
+        // total_cost_usd is the session's running total, not this turn's cost.
+        // (Found in the C2 test: adding the totals up overcounted.)
+        const total = m.total_cost_usd ?? chatCost;
+        const cost = Math.max(0, total - chatCost);
+        chatCost = Math.max(chatCost, total);
         post({ type: 'turn-end', error: m.is_error ? String(m.result ?? m.subtype) : null, cost, chatCost });
-        console.log(`Turn done: $${cost.toFixed(4)}${m.is_error ? `, error: ${m.result ?? m.subtype}` : ''}`);
+        console.log(`Turn done: $${cost.toFixed(4)}, this chat $${chatCost.toFixed(4)}${m.is_error ? `, error: ${m.result ?? m.subtype}` : ''}`);
       }
     }
   } catch (err) {

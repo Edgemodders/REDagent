@@ -30,3 +30,4 @@ $target = Join-Path $apps 'redagent'
 robocopy $package $target /MIR /NFL /NDL /NJH /NJS /NP /XF '*.bak' | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "Copying failed (robocopy $LASTEXITCODE)." }
 Write-Output "Deployed REDagent to $target"
+exit 0 # robocopy leaves 1 for "files copied"

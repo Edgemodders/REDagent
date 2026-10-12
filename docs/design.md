@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, is built; its in-game test is pending** (steps below).
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** Next: C3, authoring.
 
 ## What it can do
 
@@ -143,6 +143,14 @@ Tested against a stand-in for Anthropic's API that streams like the real one: th
 8. Ask: "Why might the crash mod's Throw button break?" It should read `crash-mod/mod.mjs` and explain.
 9. Press **Sonnet 5.5**, ask anything short, and compare the cost.
 10. Press **New chat**, then quit the game.
+
+**Result, 2026-10-12: passed.** The key was pasted with Ctrl+V and saved; the tools were allowed in the launcher; every question was answered from live tool calls (the mod log, V's health, level and money through `api_call` after **Allow**, the Hello mod window's image, the crash mod's code). Six turns, five on Opus 5.5 and one on Sonnet 5.5, cost **$0.34** in all; turns took 11 to 55 seconds. The agent process used about 116 MB.
+
+| Finding | Notes |
+|---|---|
+| The cost shown was too high | The SDK's `total_cost_usd` is the running total of the session, and REDagent added the totals up. **Fixed:** the chat's cost is the latest total, a turn's cost the difference |
+| A window's invisible part caught clicks (Hello mod over the Mod log's title bar) | In REDnode: the plugin now logs, for every press, which windows lie under the cursor and the transparency it sees, to find the cause in the next test |
+| Request: double-click a title bar to roll the window up | Built in REDnode's UI kit, for the next test |
 
 ## Phases
 
