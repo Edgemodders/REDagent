@@ -41,11 +41,12 @@
   .confirm code { font: 12px var(--rn-mono); color: var(--rn-accent-2); overflow-wrap: anywhere; }
   .confirm .answer { font: 12px var(--rn-mono); color: var(--rn-dim); }
   .working { font: 12px var(--rn-mono); color: var(--rn-accent); letter-spacing: .1em; }
+  .turn-cost { align-self: flex-end; font: 11px var(--rn-mono); color: var(--rn-dim); opacity: .7; letter-spacing: .04em; }
   .ask { display: flex; gap: 8px; align-items: flex-end; }
   .ask rn-input { flex: 1; }
   .bottom { display: flex; align-items: center; gap: 6px; padding: 6px 14px 9px; flex-wrap: wrap; }
   .bottom .spacer { flex: 1; }
-  .bottom .cost { font: 11px var(--rn-mono); color: var(--rn-dim); letter-spacing: .06em; }
+  .bottom .cost { font: 11px var(--rn-mono); color: var(--rn-dim); opacity: .8; letter-spacing: .06em; }
   .bottom rn-button::part(button) { min-height: 26px; padding: 3px 9px; font-size: 11px; }
 </style>
 </head>
@@ -73,7 +74,7 @@
       <rn-button data-model="claude-opus-5-5" variant="ghost">Opus 5.5</rn-button>
       <rn-button data-model="claude-sonnet-5-5" variant="ghost">Sonnet 5.5</rn-button>
       <span class="spacer"></span>
-      <span class="cost" id="cost">$0.00</span>
+      <span class="cost" id="cost" title="What this chat has cost so far">Chat total: $0.000</span>
       <rn-button id="new" variant="ghost">New chat</rn-button>
       <rn-button id="key-button" variant="ghost">Key</rn-button>
     </div>

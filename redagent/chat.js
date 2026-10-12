@@ -119,7 +119,7 @@ function show() {
     if (b.dataset.model === state.model) b.removeAttribute('variant');
     else b.setAttribute('variant', 'ghost');
   }
-  $('cost').textContent = `This chat: $${(state.cost ?? 0).toFixed(3)}`;
+  $('cost').textContent = `Chat total: $${(state.cost ?? 0).toFixed(3)}`;
 }
 
 function send() {
@@ -227,6 +227,10 @@ channel.on((m) => {
       current = null;
       setWorking(false);
       if (m.error) add(div('error', esc(m.error)));
+      // What this answer cost, beside the chat's running total, so the two are not confused.
+      if (m.cost > 0) {
+        add(div('turn-cost', `This answer: $${m.cost.toFixed(3)} &middot; chat total $${(m.chatCost ?? 0).toFixed(3)}`));
+      }
       state.busy = false;
       state.cost = m.chatCost;
       show();
