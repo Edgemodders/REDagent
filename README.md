@@ -1,10 +1,23 @@
-# REDagent
+<p align="center">
+  <img src="docs/assets/brand/banner.png" alt="REDagent: writes, runs and fixes REDnode mods with you, while you play. Powered by Claude. Runtime REDnode, model Claude Opus and Sonnet, changes shown as a diff with allow and undo." width="100%">
+</p>
+
+<p align="center">
+  <a href="https://edgemodders.github.io/REDagent/"><img src="docs/assets/brand/badges/docs.svg" alt="docs: read the docs"></a>
+  <img src="docs/assets/brand/badges/status.svg" alt="status: C3 authoring">
+  <a href="https://github.com/Edgemodders/REDnode"><img src="docs/assets/brand/badges/rednode.svg" alt="runs in: REDnode"></a>
+  <img src="docs/assets/brand/badges/claude.svg" alt="powered by: Claude">
+  <a href="LICENSE"><img src="docs/assets/brand/badges/license.svg" alt="license: MIT"></a>
+</p>
 
 An assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with you, while you play. Powered by Claude.
 
-You ask, in a chat window in the game: "make me a mod that warns me when my health drops below 30%". REDagent writes the mod, REDnode's hot reload runs it, REDagent reads the mod's log and checks the game's answers through REDnode's game API, and fixes what is wrong. Every file it writes is shown to you first.
+You ask, in a chat window in the game: "make me a mod that warns me when my health drops below 30%". REDagent writes the mod, REDnode's hot reload runs it, REDagent reads the mod's log and checks the game's answers through REDnode's game API, and fixes what is wrong. Every change to a file is shown to you first as a diff, and can be undone.
 
-**Status: phase C2, the chat in the game, built; its in-game test is pending.** The design is in [docs/design.md](docs/design.md). C1, the REDnode kernel's MCP server, passed in game.
+**[Read the guide](https://edgemodders.github.io/REDagent/)** &middot; [Design](docs/design.md) &middot; [REDnode](https://github.com/Edgemodders/REDnode) &middot; [REDcode](https://github.com/Edgemodders/REDcode)
+
+> [!NOTE]
+> **Status: phase C3, writing mods, is built; its in-game test is pending.** C1, the REDnode kernel's MCP server, and C2, the chat in the game, passed in game. Phases and results are in [docs/design.md](docs/design.md).
 
 ## Install (developers)
 
@@ -13,7 +26,7 @@ You ask, in a chat window in the game: "make me a mod that warns me when my heal
 3. `.\tools\deploy.ps1 -GameDir '<your Cyberpunk 2077 folder>'`
 4. In the game, allow REDagent to use REDnode's tools in the REDnode launcher, then paste your API key into REDagent.
 
-`node tools/check-key.mjs` checks a key outside the game.
+`node tools/check-key.mjs` checks a key outside the game. `.\tools\brand\render.ps1` renders the banner, icon and badges.
 
 | You need | Why |
 |---|---|

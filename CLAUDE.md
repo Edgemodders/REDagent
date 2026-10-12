@@ -8,6 +8,12 @@ REDagent is an in-game assistant for REDnode mods, powered by Claude. Read [docs
 - C1, the kernel MCP server, passed in game on 2026-10-12 (in the REDnode repo: `packages/overlay/mcp.js`, `docs/mcp.md`). C2, the chat in the game (`redagent/`), passed in game on 2026-10-12. C3, authoring (Write and Edit kept to the apps folders, a diff card for every change, backups and Undo), is built and tested in the mock; **its in-game test is pending** (steps in docs/design.md). Deploy with `tools/deploy.ps1 -GameDir ...` after REDnode's deploy; `node tools/build.mjs` prepares the briefing. For local runs without a key, a stand-in API can be set with `ANTHROPIC_BASE_URL`.
 - Stop after each phase for the user's in-game test, as in REDnode.
 
+## Docs site
+
+- `docs/` is published by GitHub Pages at https://edgemodders.github.io/REDagent/ through `.github/workflows/pages.yml` (Settings > Pages > Source: GitHub Actions). Jekyll renders it with the HUD layout copied from REDbridge.
+- `docs/index.md` is the player's guide: what REDagent does, install, first run, changes and undo, key and data, cost, troubleshooting. Keep it current with each phase, in plain words for players. `docs/design.md` is for developers.
+- Add every new page to `nav` in `docs/_config.yml`. The banner, icon and badges come from `tools/brand/` (`render.ps1`); update the status badge in `badges.py` when the phase changes.
+
 ## Conventions
 
 The same as REDnode's:
