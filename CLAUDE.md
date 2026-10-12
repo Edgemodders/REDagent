@@ -5,7 +5,7 @@ REDagent is an in-game assistant for REDnode mods, powered by Claude. Read [docs
 ## Status and next step
 
 - Plan agreed 2026-10-12. Phases C1 to C4 are in the design.
-- **C1, the kernel MCP server, is built in the REDnode repo** (`packages/overlay/mcp.js`, `docs/mcp.md`); its in-game test is pending. **Next: C2, the chat in the game, built here**, starting with a spike: the Agent SDK inside a REDnode mod process.
+- C1, the kernel MCP server, passed in game on 2026-10-12 (in the REDnode repo: `packages/overlay/mcp.js`, `docs/mcp.md`). **Next: C2, the chat in the game, built here**, starting with a spike: the Agent SDK inside a REDnode mod process.
 - Stop after each phase for the user's in-game test, as in REDnode.
 
 ## Conventions

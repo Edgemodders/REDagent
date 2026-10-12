@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **plan agreed 2026-10-12. C1, the kernel MCP server, is built in the REDnode repo** ([docs](https://edgemodders.github.io/REDnode/mcp.html)); its in-game test is pending.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)): Claude Code used every tool while the game ran. Next: C2.
 
 ## What it can do
 
