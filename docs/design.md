@@ -46,7 +46,28 @@ From Anthropic's Agent SDK docs, checked 2026-10-12:
 
 ## The agent
 
-The **Claude Agent SDK**, with the plain Claude API and our own tools as the fallback if it cannot run inside a REDnode mod process.
+The **Claude Agent SDK**, chosen 2026-10-12 after a spike. REDagent is an optional add-on: players of REDnode mods do not need it, so its size is acceptable.
+
+| Spike, 2026-10-12 (SDK 0.3.296) | Result |
+|---|---|
+| Runs inside a REDnode mod process (Electron utility process, Windows) | Yes: `claude.exe` starts in about 0.5 s |
+| Uses the kernel MCP server | Yes: all 9 REDnode tools, beside Claude Code's own |
+| Uses an API key | Yes, once the key is approved in Claude Code's config: `.claude.json` in the config folder, `customApiKeyResponses.approved` with the key's last 20 characters. Without that it answers "Not logged in" and sends nothing. Shown with a stand-in for Anthropic's API that recorded the key in the `x-api-key` header |
+| Size | 282 MB installed; `claude.exe` is 249 MB |
+| Files | `claude.exe` writes config, sessions and telemetry into `CLAUDE_CONFIG_DIR`. Inside a package folder that set off REDnode's hot reload in a loop, so the config folder must be outside the apps folder |
+| A refused key | Claude Code retries for a long time; REDagent stops after 30 s and says why |
+
+Always set for `claude.exe`: `CLAUDE_CONFIG_DIR` to REDagent's own folder (never the player's Claude Code login), `ANTHROPIC_API_KEY` from REDagent's settings, `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC=1`, and no `ANTHROPIC_AUTH_TOKEN` or `CLAUDE_CODE_OAUTH_TOKEN`. `tools/check-key.mjs` checks a key outside the game the same way.
+
+### What C2 needs from REDnode
+
+| Need | Why |
+|---|---|
+| A private data folder per package, outside the apps folder | `claude.exe`'s config and sessions, chat history |
+| Hot reload that ignores dot folders | A package's own tools may write there |
+| Secrets per package, encrypted with Electron's `safeStorage` (main process only) | The player's API key |
+| MCP access for a package, with its own token | REDagent's agent uses the kernel's tools even when the external MCP switch is off |
+| Several apps folders for developers | Running REDagent from its repo beside REDnode's apps |
 
 | | Agent SDK | Claude API with our own tools |
 |---|---|---|
@@ -107,3 +128,4 @@ Each phase ends with an in-game test, as in REDnode.
 | **C2 Chat in the game** | The REDagent package: a streaming chat window built with the UI kit, key setup, model choice, cost meter. Starts with a spike: the Agent SDK inside a mod process | Questions asked in the game get answers built from live tool calls |
 | **C3 Authoring** | Write tools with diff, confirmation and undo; package permissions in the launcher; the write, hot reload, read the log, fix loop | "Make a mod that warns me below 30% health" goes from request to a working mod in the game. "Fix the crash mod's Throw button" fixes it |
 | **C4 Polish** | Session history, prompt caching for cost, a capture of the game's frame (native), and what the tests teach | To be decided |
+| **C5 Agent API for mods** | A `rednode` API for other mods to use REDagent, brokered by the host: for example `agent.ask(prompt, { context })`, streaming the answer back. A mod must ask for the `agent` permission, the player grants it in the launcher, and spending limits apply per mod, since every call costs the player | A sample mod asks REDagent a question and shows the answer; a mod without the permission is refused |

@@ -1,0 +1,14 @@
+{
+  "name": "redagent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "REDagent: an in-game assistant for REDnode mods, powered by Claude. A REDnode package.",
+  "license": "MIT",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "0.3.296",
+    "@anthropic-ai/sdk": "0.93.0",
+    "@modelcontextprotocol/sdk": "1.32.1",
+    "zod": "4.1.12"
+  }
+}
