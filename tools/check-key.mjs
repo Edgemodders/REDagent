@@ -81,7 +81,7 @@ const abortController = new AbortController();
 const timer = setTimeout(() => abortController.abort(), 30000);
 try {
   for await (const m of query({
-    prompt: 'Reply with exactly: REDagent key check OK',
+    prompt: 'In one short sentence, what is Night City?',
     options: {
       pathToClaudeCodeExecutable: exe,
       env,
