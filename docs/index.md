@@ -41,7 +41,7 @@ There is no packaged release yet. To install from source:
 ## First run
 
 1. Start the game. The REDagent window opens on the right and asks for your key.
-2. Press **F10** to open the REDnode launcher. Find REDagent and switch **Allowed** on for "REDnode's tools for AI agents". Without this, REDagent can still chat, but it cannot see your mods or the game.
+2. Press **F10** to open the REDnode launcher. Find REDagent and switch **Allowed** on for "REDnode's tools for AI agents". Without this, REDagent can still chat and read your mods' files, but it cannot see the Mod log, the game or overlay windows.
 3. Copy your API key. Click the key field in REDagent, press **Ctrl+V**, then **Save key**. The chat appears.
 4. Ask something short, like "What's in my mod log?"
 
