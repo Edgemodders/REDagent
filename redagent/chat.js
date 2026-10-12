@@ -12,6 +12,7 @@ const log = $('log');
 let state = { hasKey: false, busy: false };
 let current = null; // the assistant message being streamed: { el, text }
 const tools = new Map(); // tool use id -> line element
+const changes = new Map(); // change id -> its "Changed" line
 let editingKey = false;
 
 // ---------- Markdown, small and safe: everything is escaped first ----------
@@ -221,6 +222,70 @@ channel.on((m) => {
       deny.addEventListener('click', () => answer(false));
       row.append(allow, deny);
       card.append(row);
+      break;
+    }
+    case 'change': {
+      // A change to a file, as a diff: the player allows it, allows every change in
+      // this chat, or denies it.
+      const what = m.created ? 'create' : 'change';
+      const count = m.diff ? ` <span class="counts"><span class="add">+${m.added}</span> <span class="del">-${m.removed}</span></span>` : '';
+      const card = add(div('confirm change', `<div>REDagent wants to ${what} <code>${esc(m.file)}</code>${count}</div>`));
+      if (m.diff) {
+        const pre = document.createElement('pre');
+        pre.className = 'diff';
+        for (const l of m.diff) {
+          const line = document.createElement('span');
+          line.className = { '+': 'add', '-': 'del', '@': 'skip' }[l.t] ?? '';
+          line.textContent = `${l.t === '@' ? '' : l.t} ${l.text}\n`;
+          pre.append(line);
+        }
+        if (m.more) pre.append(Object.assign(document.createElement('span'), { className: 'skip', textContent: `... ${m.more} more lines\n` }));
+        if (m.diff.length > 24) {
+          pre.classList.add('folded');
+          const more = div('unfold', 'Show all');
+          more.addEventListener('click', () => {
+            pre.classList.toggle('folded');
+            more.textContent = pre.classList.contains('folded') ? 'Show all' : 'Show less';
+          });
+          card.append(pre, more);
+        } else {
+          card.append(pre);
+        }
+      } else {
+        card.append(div('answer', 'The change could not be previewed; the edit tool will report whether it applies.'));
+      }
+      const row = div('row');
+      const button = (label, answerWith, ghost) => {
+        const b = document.createElement('rn-button');
+        b.textContent = label;
+        if (ghost) b.setAttribute('variant', 'ghost');
+        b.addEventListener('click', () => {
+          channel.post({ type: 'confirm', id: m.id, allow: answerWith });
+          row.replaceWith(div('answer', answerWith === 'all' ? 'Allowed, with every change in this chat' : answerWith ? 'Allowed' : 'Denied'));
+        });
+        return b;
+      };
+      row.append(button('Allow', true), button('Allow all in this chat', 'all', true), button('Deny', false, true));
+      card.append(row);
+      break;
+    }
+    case 'changed': {
+      // A change was written: offer Undo.
+      const el = add(div('changed', `${m.created ? 'Created' : 'Changed'} <code>${esc(m.file)}</code> `));
+      const undo = document.createElement('rn-button');
+      undo.textContent = 'Undo';
+      undo.setAttribute('variant', 'ghost');
+      undo.addEventListener('click', () => channel.post({ type: 'undo', id: m.id }));
+      el.append(undo);
+      changes.set(m.id, el);
+      break;
+    }
+    case 'undone': {
+      const el = changes.get(m.id);
+      if (el) {
+        el.querySelector('rn-button')?.remove();
+        el.append(Object.assign(document.createElement('span'), { className: 'answer', textContent: 'Undone' }));
+      }
       break;
     }
     case 'turn-end':

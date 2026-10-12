@@ -40,6 +40,18 @@
     border-left: 3px solid var(--rn-accent); font-size: 14px; }
   .confirm code { font: 12px var(--rn-mono); color: var(--rn-accent-2); overflow-wrap: anywhere; }
   .confirm .answer { font: 12px var(--rn-mono); color: var(--rn-dim); }
+  .confirm .row { flex-wrap: wrap; }
+  .counts { font: 12px var(--rn-mono); }
+  .add { color: var(--rn-ok); }
+  .del { color: var(--rn-danger); }
+  .skip { color: var(--rn-dim); }
+  pre.diff { margin: 0; padding: 6px 8px; background: var(--rn-bg); border: 1px solid var(--rn-line);
+    font: 11.5px/1.4 var(--rn-mono); white-space: pre-wrap; overflow-wrap: anywhere; }
+  pre.diff.folded { max-height: 22em; overflow: hidden; -webkit-mask-image: linear-gradient(#000 80%, transparent); }
+  .unfold { align-self: flex-start; font: 11px var(--rn-mono); color: var(--rn-accent-2); cursor: pointer; letter-spacing: .06em; }
+  .changed { display: flex; align-items: center; gap: 8px; font: 12px var(--rn-mono); color: var(--rn-dim); }
+  .changed code { color: var(--rn-accent-2); }
+  .changed rn-button::part(button) { min-height: 22px; padding: 2px 8px; font-size: 11px; }
   .working { font: 12px var(--rn-mono); color: var(--rn-accent); letter-spacing: .1em; }
   .turn-cost { align-self: flex-end; font: 11px var(--rn-mono); color: var(--rn-dim); opacity: .7; letter-spacing: .04em; }
   .ask { display: flex; gap: 8px; align-items: flex-end; }

@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** Next: C3, authoring (being built). Then C6, REDagent in REDcode, planned with the REDcode session.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, is built; its in-game test is pending** (steps below). Then C6, REDagent in REDcode, planned with the REDcode session.
 
 ## What it can do
 
@@ -153,6 +153,34 @@ Tested against a stand-in for Anthropic's API that streams like the real one: th
 | The cost shown was too high | The SDK's `total_cost_usd` is the running total of the session, and REDagent added the totals up. **Fixed:** the chat's cost is the latest total, a turn's cost the difference |
 | A window's invisible part caught clicks (Hello mod over the Mod log's title bar) | In REDnode: the plugin now logs, for every press, which windows lie under the cursor and the transparency it sees, to find the cause in the next test |
 | Request: double-click a title bar to roll the window up | Built in REDnode's UI kit, for the next test |
+
+## C3: what was built
+
+| Piece | Where |
+|---|---|
+| Write and Edit | Claude Code's own tools, added beside Read, Glob and Grep. A PreToolUse hook, which runs before anything else, denies a write outside the apps folders, in REDagent's own folder or in any `node_modules` |
+| The change card | Before a write, `agent.mjs` works out the file after the change (Write: the new content; Edit: the replacement) and posts a line diff (`diff.mjs`) with 3 lines of context. Long diffs fold. The player picks **Allow**, **Allow all in this chat** or **Deny**. A denied change goes back to Claude as "the player did not allow this change" |
+| Backups and Undo | Each allowed change backs the file up first, into REDagent's data folder (`backups/`). Once the tool reports success, the chat shows "Changed ..." or "Created ..." with **Undo**. Undo restores the backup, or removes a file REDagent created. The next prompt tells Claude what was undone |
+| Trust | "Allow all in this chat" lasts until **New chat** |
+| The briefing | Says REDagent can write, lists what it may not touch, and gives the loop: read, small change, wait for hot reload, check `apps`, `logs` and the window, fix. New packages get `"open": true` so they start at once |
+| From REDnode | New packages start, and removed ones stop, without a restart (5163e89). A package skipped because its manifest names a file that does not exist yet is looked at again when any of its files changes, so writing the manifest first works. A secret that cannot be decrypted (saved under another Windows account) counts as unset instead of crashing the mod |
+
+Tested in the mock game with the stand-in API: a new manifest shows a card with +5 lines, **Allow** writes it, REDnode skips the package until `main.mjs` exists and then starts it, **Undo** removes the file and REDnode stops the package. An Edit after a Read shows a -1/+1 card; **Allow all in this chat** applies it, **Undo** restores the backup, the next prompt carries the undo note, and the next edit runs without a card. Writes to REDagent's folder, to a `node_modules` folder and to `C:\Windows\Temp` are all denied, and no file appears.
+
+## C3 test
+
+Steps 1 and 2 are the same as the C2 test (deploy both, load a save, the key is already saved).
+
+1. Close the game. Deploy REDnode, then REDagent.
+2. Start the game and load a save. Check that REDagent's tools are still **Allowed** in the launcher (F10).
+3. Ask: "Make a mod that shows a warning when V's health is below 30%." A card shows each new file as a diff. Press **Allow** on the first, then **Allow all in this chat**.
+4. Watch REDagent check its work (`apps`, `logs`, maybe `window_text`). The new mod should appear in the launcher and run.
+5. Get hurt below 30% (or ask REDagent to set V's health lower and allow that call). The warning should show.
+6. Press **Undo** on one of the changes. Ask: "What did I just undo?" It should know.
+7. Ask: "Fix the crash mod's Throw button." Allow the change, then press **Throw** in the crash mod. The Mod log should show no new crash.
+8. Ask: "Change your own briefing to say hello." It should say it may not change its own files.
+9. Press **New chat**, ask for a small change to the new mod: the card should come back (trust ends with the chat).
+10. Quit the game.
 
 ## Phases
 

@@ -5,12 +5,15 @@
 // Safety, see docs/design.md:
 //   - the player's own API key, from REDnode's encrypted secrets, approved only in
 //     REDagent's own Claude Code config folder: never the player's Claude Code login;
-//   - files: Read, Glob and Grep only, inside the apps folders (a PreToolUse hook);
-//   - calls that may change the game ask the player in the chat first.
+//   - files: read and written only inside the apps folders, never REDagent itself
+//     or node_modules (a PreToolUse hook, which runs before anything else);
+//   - every change to a file is shown to the player as a diff and backed up first,
+//     with Undo; calls that may change the game ask the player first.
 
 import { channel, kernel, pkg, secrets } from 'rednode';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { diffLines } from './diff.mjs';
 import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
 
@@ -34,7 +37,10 @@ const KERNEL = 'mcp__rednode__';
 const READ_ONLY = ['logs', 'game_state', 'perf', 'gameapi_lookup', 'window_text', 'window_image', 'api_get'].map(
   (t) => KERNEL + t,
 );
-const FILE_TOOLS = ['Read', 'Glob', 'Grep'];
+const READ_TOOLS = ['Read', 'Glob', 'Grep'];
+const WRITE_TOOLS = ['Write', 'Edit'];
+const FILE_TOOLS = [...READ_TOOLS, ...WRITE_TOOLS];
+const BACKUPS = join(pkg.dataDir, 'backups');
 
 mkdirSync(CONFIG_DIR, { recursive: true });
 
@@ -54,7 +60,11 @@ let sessionId = null; // the chat's Claude Code session, resumed turn after turn
 let chatCost = 0; // what this chat has cost: the SDK reports a running total per session
 let running = null; // AbortController of the turn in progress
 let nextConfirm = 1;
-const confirms = new Map(); // confirm id -> resolve(boolean)
+const confirms = new Map(); // confirm id -> resolve(answer)
+let trustEdits = false; // the player chose "Allow edits for this chat"
+const edits = new Map(); // tool use id -> { id, file, backup | null, undone }
+let nextEdit = 1;
+const notes = []; // told to Claude at the start of the next turn, such as an undo
 
 const post = (msg) => channel.post(msg);
 
@@ -119,23 +129,108 @@ function insideApps(p, cwd) {
   });
 }
 
+// Where REDagent may not write even inside the apps folders: itself, and installed packages.
+function writable(p) {
+  const full = resolve(APPS_DIRS[0], p);
+  const rel = relative(resolve(pkg.dir), full);
+  if (rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))) return 'REDagent may not change its own files.';
+  if (/(^|[\\/])node_modules([\\/]|$)/.test(full)) return 'REDagent may not change installed packages (node_modules).';
+  return null;
+}
+
+const deny = (reason) => ({
+  hookSpecificOutput: { hookEventName: 'PreToolUse', permissionDecision: 'deny', permissionDecisionReason: reason },
+});
+
 const fileGuard = {
   matcher: FILE_TOOLS.join('|'),
   hooks: [
     async (input) => {
       const i = input.tool_input ?? {};
       const p = i.file_path ?? i.path ?? '';
-      if (insideApps(p, APPS_DIRS[0])) return {};
-      return {
-        hookSpecificOutput: {
-          hookEventName: 'PreToolUse',
-          permissionDecision: 'deny',
-          permissionDecisionReason: 'REDagent may only read inside the REDnode apps folders.',
-        },
-      };
+      if (!insideApps(p, APPS_DIRS[0])) return deny('REDagent may only use files inside the REDnode apps folders.');
+      if (WRITE_TOOLS.includes(input.tool_name)) {
+        const why = writable(p);
+        if (why) return deny(why);
+      }
+      return {};
     },
   ],
 };
+
+// ---------- changes to files: a diff for the player, a backup, undo ----------
+
+const shortPath = (full) => {
+  for (const d of APPS_DIRS) {
+    const rel = relative(d, full);
+    if (!rel.startsWith('..') && !isAbsolute(rel)) return rel.replace(/\\/g, '/');
+  }
+  return full;
+};
+
+// What the file would be after the tool runs, or null when that cannot be known.
+function afterChange(name, input, before) {
+  if (name === 'Write') return String(input.content ?? '');
+  if (before === null) return null;
+  const oldText = String(input.old_string ?? '');
+  const newText = String(input.new_string ?? '');
+  if (!oldText || !before.includes(oldText)) return null; // the edit will fail on its own
+  return input.replace_all ? before.split(oldText).join(newText) : before.replace(oldText, () => newText);
+}
+
+function backup(file, before) {
+  if (before === null) return null; // a new file: undo removes it
+  const dir = join(BACKUPS, `${Date.now()}-${nextEdit}`);
+  mkdirSync(dir, { recursive: true });
+  const copy = join(dir, file.replace(/[\\/:]/g, '_'));
+  copyFileSync(file, copy);
+  return copy;
+}
+
+async function confirmChange(name, input, toolUseID, signal) {
+  const file = resolve(APPS_DIRS[0], String(input.file_path ?? ''));
+  const before = existsSync(file) ? readFileSync(file, 'utf8') : null;
+  const after = afterChange(name, input, before);
+  let allowed = trustEdits;
+  if (!allowed) {
+    const id = nextConfirm++;
+    const d = after === null ? null : diffLines(before ?? '', after);
+    post({
+      type: 'change',
+      id,
+      file: shortPath(file),
+      created: before === null,
+      diff: d ? d.lines.slice(0, 400) : null,
+      more: d ? Math.max(0, d.lines.length - 400) : 0,
+      added: d?.added ?? 0,
+      removed: d?.removed ?? 0,
+    });
+    const answer = await new Promise((done) => {
+      confirms.set(id, done);
+      signal?.addEventListener('abort', () => {
+        confirms.delete(id);
+        done(false);
+      });
+    });
+    if (answer === 'all') trustEdits = true;
+    allowed = !!answer;
+  }
+  if (!allowed) return { behavior: 'deny', message: 'The player did not allow this change. Ask what they want instead.' };
+  const editId = nextEdit++;
+  edits.set(toolUseID, { id: editId, file, backup: backup(file, before), undone: false, created: before === null });
+  return { behavior: 'allow', updatedInput: input };
+}
+
+function undo(editId) {
+  const e = [...edits.values()].find((x) => x.id === editId);
+  if (!e || e.undone) return;
+  if (e.backup) copyFileSync(e.backup, e.file);
+  else rmSync(e.file, { force: true });
+  e.undone = true;
+  notes.push(`The player undid your change to ${shortPath(e.file)}${e.backup ? '; it is back to how it was before' : '; the new file was removed'}.`);
+  post({ type: 'undone', id: editId });
+  console.log(`Undid the change to ${shortPath(e.file)}`);
+}
 
 function describe(name, input) {
   const t = name.startsWith(KERNEL) ? name.slice(KERNEL.length) : name;
@@ -162,8 +257,9 @@ function askPlayer(text, signal) {
 
 // Decides every tool call: reading is allowed (the hook keeps files inside the
 // apps folders), changes ask the player, anything else is refused.
-async function canUseTool(name, input, { signal }) {
-  if (FILE_TOOLS.includes(name) || READ_ONLY.includes(name)) return { behavior: 'allow', updatedInput: input };
+async function canUseTool(name, input, { signal, toolUseID }) {
+  if (READ_TOOLS.includes(name) || READ_ONLY.includes(name)) return { behavior: 'allow', updatedInput: input };
+  if (WRITE_TOOLS.includes(name)) return confirmChange(name, input, toolUseID, signal);
   const t = name.startsWith(KERNEL) ? name.slice(KERNEL.length) : null;
   if (t === 'apps' && (!input.action || input.action === 'list')) return { behavior: 'allow', updatedInput: input };
   if (t === 'api_call' || t === 'apps') {
@@ -194,7 +290,13 @@ function toolName(name) {
   return name.startsWith(KERNEL) ? name.slice(KERNEL.length) : name;
 }
 
-function summarize(input) {
+function summarize(input, name) {
+  // File tools: the file or pattern, relative to the apps folder, is what the player needs.
+  if (FILE_TOOLS.includes(name)) {
+    const where = input?.file_path ?? input?.path;
+    const parts = [input?.pattern, where && shortPath(resolve(APPS_DIRS[0], String(where)))].filter(Boolean);
+    if (parts.length) return parts.join(' in ');
+  }
   const s = JSON.stringify(input ?? {});
   return s.length > 140 ? `${s.slice(0, 137)}...` : s;
 }
@@ -221,7 +323,7 @@ async function ask(text) {
   console.log(`Turn with ${settings.model}${sessionId ? ' (continuing the chat)' : ''}`);
   try {
     for await (const m of query({
-      prompt: text,
+      prompt: notes.length ? `${notes.splice(0).map((n) => `(${n})`).join('\n')}\n\n${text}` : text,
       options: {
         pathToClaudeCodeExecutable: CLAUDE_EXE,
         env: cleanEnv(key),
@@ -252,11 +354,19 @@ async function ask(text) {
         }
       } else if (m.type === 'assistant') {
         for (const b of m.message.content ?? []) {
-          if (b.type === 'tool_use') post({ type: 'tool-input', id: b.id, name: toolName(b.name), input: summarize(b.input) });
+          if (b.type === 'tool_use') post({ type: 'tool-input', id: b.id, name: toolName(b.name), input: summarize(b.input, b.name) });
         }
       } else if (m.type === 'user') {
         const content = Array.isArray(m.message?.content) ? m.message.content : [];
-        for (const b of content) if (b.type === 'tool_result') post({ type: 'tool-done', id: b.tool_use_id, error: !!b.is_error });
+        for (const b of content) {
+          if (b.type !== 'tool_result') continue;
+          post({ type: 'tool-done', id: b.tool_use_id, error: !!b.is_error });
+          const e = edits.get(b.tool_use_id);
+          if (e) {
+            if (b.is_error) edits.delete(b.tool_use_id); // nothing changed, nothing to undo
+            else post({ type: 'changed', id: e.id, file: shortPath(e.file), created: e.created });
+          }
+        }
       } else if (m.type === 'result') {
         // total_cost_usd is the session's running total, not this turn's cost.
         // (Found in the C2 test: adding the totals up overcounted.)
@@ -321,11 +431,16 @@ channel.on(async (msg) => {
         if (!running) {
           sessionId = null;
           chatCost = 0;
+          trustEdits = false;
+          notes.length = 0;
           await status();
         }
         break;
+      case 'undo':
+        undo(Number(msg.id));
+        break;
       case 'confirm':
-        confirms.get(msg.id)?.(!!msg.allow);
+        confirms.get(msg.id)?.(msg.allow === 'all' ? 'all' : !!msg.allow);
         confirms.delete(msg.id);
         break;
       default:
