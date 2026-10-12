@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)): Claude Code used every tool while the game ran. Next: C2.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, is built; its in-game test is pending** (steps below).
 
 ## What it can do
 
@@ -52,7 +52,7 @@ The **Claude Agent SDK**, chosen 2026-10-12 after a spike. REDagent is an option
 |---|---|
 | Runs inside a REDnode mod process (Electron utility process, Windows) | Yes: `claude.exe` starts in about 0.5 s |
 | Uses the kernel MCP server | Yes: all 9 REDnode tools, beside Claude Code's own |
-| Uses an API key | Yes, once the key is approved in Claude Code's config: `.claude.json` in the config folder, `customApiKeyResponses.approved` with the key's last 20 characters. Without that it answers "Not logged in" and sends nothing. Shown with a stand-in for Anthropic's API that recorded the key in the `x-api-key` header |
+| Uses an API key | Yes, confirmed with a real key on 2026-10-12, once the key is approved in Claude Code's config: `.claude.json` in the config folder, `customApiKeyResponses.approved` with the key's last 20 characters. Without that it answers "Not logged in" and sends nothing. Shown with a stand-in for Anthropic's API that recorded the key in the `x-api-key` header |
 | Size | 282 MB installed; `claude.exe` is 249 MB |
 | Files | `claude.exe` writes config, sessions and telemetry into `CLAUDE_CONFIG_DIR`. Inside a package folder that set off REDnode's hot reload in a loop, so the config folder must be outside the apps folder |
 | A refused key | Claude Code retries for a long time; REDagent stops after 30 s and says why |
@@ -117,6 +117,32 @@ Game types are looked up on demand with `gameapi_lookup`, not carried in the pro
 | `window_text`, `window_image` | An overlay window's text, or its image: the window's own pixels, before the plugin places it on screen | C1 |
 | `api_call` | A live game call. Calls that may change the game ask first | C1 |
 | Read, search, edit, write files | In the apps folder only, with a diff and confirmation for every write, and undo | C3 |
+
+## C2: what was built
+
+| Piece | Where |
+|---|---|
+| The package | `redagent/`: `rednode-app.json` (an app and a Node mod, its own process, asks for `mcp`), `agent.mjs` (the agent), `index.html` and `chat.js` (the chat window), `briefing.md` (the hand-written briefing) |
+| The briefing | `briefing.md`, then the apps folders on this PC, then REDnode's Overlay apps guide, copied by `tools/build.mjs` into `redagent/briefing/` |
+| The chat | Streams Claude's text as it comes, shows each tool call, asks before `api_call` and before opening, closing or restarting a package, counts what the chat costs, and lets the player pick Opus 5.5 or Sonnet 5.5 and start a new chat |
+| The key | Pasted once (Ctrl+V works in overlay windows), kept in REDnode's encrypted secrets, approved only in REDagent's own Claude Code config folder in its data folder |
+| From REDnode | `pkg`, `secrets`, `kernel.mcp()` with a launcher grant, `channel` between the window and the agent, several apps folders, Ctrl shortcuts in overlay windows |
+| Deploy | `tools/deploy.ps1`, after REDnode's own deploy |
+
+Tested against a stand-in for Anthropic's API that streams like the real one: the key is saved and sent, the briefing is the system prompt, the kernel's 9 tools are offered, a `logs` call and its answer stream into the chat with Markdown, a second question continues the same chat, an `api_call` waits for **Allow** and then runs, and the cost adds up.
+
+## C2 test
+
+1. Close the game. Deploy REDnode (`tools\deploy-native.ps1`), then REDagent (`tools\deploy.ps1`), both with `-GameDir`.
+2. Start the game and load a save. The REDagent window opens at the right, asking for a key.
+3. **F10**. In the launcher, find REDagent: switch **Allowed** on for "REDnode's tools for AI agents".
+4. Copy your API key, click the key field in REDagent, press **Ctrl+V**, then **Save key**. The chat appears.
+5. Ask: "What's in my mod log?" It should call `logs` and summarize. Watch the cost at the bottom.
+6. Ask: "What are V's health, level and money?" It should look the functions up and call the game, and ask before each call; allow them.
+7. Ask: "Capture the Hello mod window and tell me what it shows."
+8. Ask: "Why might the crash mod's Throw button break?" It should read `crash-mod/mod.mjs` and explain.
+9. Press **Sonnet 5.5**, ask anything short, and compare the cost.
+10. Press **New chat**, then quit the game.
 
 ## Phases
 

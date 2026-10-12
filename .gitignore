@@ -1,3 +1,5 @@
 node_modules/
 # claude.exe's own files, if it is ever run inside the repo
 .claude-config/
+# copied from REDnode by tools/build.mjs
+redagent/briefing/
