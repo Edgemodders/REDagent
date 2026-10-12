@@ -264,7 +264,11 @@ async function ask(text) {
         const cost = Math.max(0, total - chatCost);
         chatCost = Math.max(chatCost, total);
         post({ type: 'turn-end', error: m.is_error ? String(m.result ?? m.subtype) : null, cost, chatCost });
-        console.log(`Turn done: $${cost.toFixed(4)}, this chat $${chatCost.toFixed(4)}${m.is_error ? `, error: ${m.result ?? m.subtype}` : ''}`);
+        // Prompt caching is automatic (Claude Code marks the system prompt and the latest
+        // messages); these figures show it working: most input should be read from cache.
+        const u = m.usage ?? {};
+        const cache = `input ${u.input_tokens ?? 0}, from cache ${u.cache_read_input_tokens ?? 0}, to cache ${u.cache_creation_input_tokens ?? 0}`;
+        console.log(`Turn done: $${cost.toFixed(4)}, this chat $${chatCost.toFixed(4)}; tokens: ${cache}${m.is_error ? `; error: ${m.result ?? m.subtype}` : ''}`);
       }
     }
   } catch (err) {

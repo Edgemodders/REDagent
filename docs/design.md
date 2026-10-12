@@ -91,6 +91,8 @@ Locked down either way:
 
 Model: `claude-opus-5-5` by default, `claude-sonnet-5-5` as the cheaper choice. A cost meter shows what each chat has cost.
 
+Prompt caching is automatic: Claude Code marks the system prompt (the briefing, about 23,000 characters) and the latest messages, and the tools come before them, so each turn reads the briefing and the chat so far from the cache. Checked on 2026-10-12 with a stand-in API (three cache markers per request). A model switch, or a pause of more than about 5 minutes, writes the cache again. The mod log shows each turn's tokens read from and written to the cache.
+
 ## The briefing
 
 A system prompt for the REDnode world. Most of it is generated from REDnode's [Overlay apps guide](https://edgemodders.github.io/REDnode/overlay-apps.html), so it stays current and the guide is tested by use.
