@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** Next: C3, authoring.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** Next: C3, authoring (being built). Then C6, REDagent in REDcode, planned with the REDcode session.
 
 ## What it can do
 
@@ -162,6 +162,7 @@ Each phase ends with an in-game test, as in REDnode.
 |---|---|---|
 | **C1 Kernel MCP server** (REDnode repo) | The read-only tools on localhost with a token, and `api_call` with confirmation | From Claude Code on the desktop, while the game runs: "what's V's health?", "show the Mod log errors", "capture the Hello mod window" |
 | **C2 Chat in the game** | The REDagent package: a streaming chat window built with the UI kit, key setup, model choice, cost meter. Starts with a spike: the Agent SDK inside a mod process | Questions asked in the game get answers built from live tool calls |
-| **C3 Authoring** | Write tools with diff, confirmation and undo; package permissions in the launcher; the write, hot reload, read the log, fix loop | "Make a mod that warns me below 30% health" goes from request to a working mod in the game. "Fix the crash mod's Throw button" fixes it |
+| **C3 Authoring** | Claude Code's Write and Edit tools, kept to the apps folders (never REDagent itself or `node_modules`); a diff card for every change with Allow, Deny and "Allow edits for this chat"; a backup of every file before it changes, with Undo; REDnode starting new packages and manifest changes without a restart; the briefing's write, hot reload, check, fix loop. No "files" permission: Node mods have full Node access, so REDnode cannot enforce one; REDagent limits itself | "Make a mod that warns me below 30% health" goes from request to a working mod in the game. "Fix the crash mod's Throw button" fixes it |
 | **C4 Polish** | Session history, prompt caching for cost, a capture of the game's frame (native), and what the tests teach | To be decided |
 | **C5 Agent API for mods** | A `rednode` API for other mods to use REDagent, brokered by the host: for example `agent.ask(prompt, { context })`, streaming the answer back. A mod must ask for the `agent` permission, the player grants it in the launcher, and spending limits apply per mod, since every call costs the player | A sample mod asks REDagent a question and shows the answer; a mod without the permission is refused |
+| **C6 REDagent in REDcode** | REDagent's agent split into a core package shared by two front ends: the in-game chat, and a REDagent view in REDcode's activity bar, beside REDnode's views. In the editor, edits show in VS Code's diff editor. The same briefing, kernel tools and settings. REDbridge's WolvenKit editing operations, exposed as MCP tools by REDbridge (being added in the REDcode session), give the same agent archive and asset work | From REDcode: "make a mod that ..." produces a working mod in the running game, with edits reviewed in VS Code |
