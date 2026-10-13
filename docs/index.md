@@ -18,9 +18,9 @@ As of 2026-10-13. An early developer build; there is no packaged release yet, so
 | C2 Chat in the game | Done, passed in game 2026-10-12. The REDagent package: a streaming chat window, key setup, Opus 5.5 or Sonnet 5.5, a cost meter. The Agent SDK runs inside a REDnode mod process |
 | C3 Authoring | Done, passed in game 2026-10-12, fixes passed a second test the same day. Write and Edit kept to the apps folders, a diff card for every change with Allow, Allow all in this chat and Deny, a backup of every file before it changes, Undo from a changes strip |
 | C4 Polish | Done, passed in game 2026-10-13. Chats kept on disk and listed, with Undo after a restart; the game's screen through REDnode's `game_image`, with or without the overlay; a waiting line while a card needs you; the Test timer app. HDR capture has unit tests only, not yet seen in game |
-| C5 Agent API for mods | Not started. A `rednode` API for other mods to ask REDagent, behind an `agent` permission granted in the launcher, with spending limits per mod |
+| C5 Agent API for mods | Built, in-game test pending. Mods ask with `agent.ask` in the `rednode` package once the player allows their `agent` permission; REDagent answers one at a time on Sonnet 5.5 with read-only tools, within a daily limit per mod ($0.25 by default), shown and changed in its Mods view |
 | C6 REDagent in REDcode | Not started. The agent as a core package with two front ends, the in-game chat and a view in REDcode, with edits reviewed in VS Code's diff editor and REDbridge's WolvenKit operations as tools |
 
-Next in REDnode comes O8, its mod manager; then C5 or C6, whichever is agreed first.
+O8, REDnode's Mod Manager, passed in game on 2026-10-13. Next after C5's test: C6.
 
 REDagent is not affiliated with CD Projekt RED or Anthropic. Source code and issues: [github.com/Edgemodders/REDagent](https://github.com/Edgemodders/REDagent)
