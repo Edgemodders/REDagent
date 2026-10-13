@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). **C4, polish, passed in game on 2026-10-13** (results below). O8 Mod Manager in REDnode passed too. **C5, the agent API for mods, is built; its in-game test is pending** (steps below).
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). **C4, polish, passed in game on 2026-10-13** (results below). O8 Mod Manager in REDnode passed too. **C5, the agent API for mods, passed in game on 2026-10-13** (results below). Next: C6, REDagent in REDcode, agreed with the user.
 
 ## What it can do
 
@@ -255,6 +255,12 @@ Use the **Test timer**: Start, then Mark after each step.
 7. Switch **Paused** on and ask again: refused. Switch it off. Mark.
 8. Switch **Pictures** on and ask: "What's on my screen?" It may use a picture now. Mark.
 9. In the Mod Manager, withdraw Ask mod's permission and ask again: refused. Quit the game.
+
+**Result, 2026-10-13: passed.** REDnode plugin 0.14.1. The Ask mod's questions were answered through REDagent on Sonnet 5.5 for $0.008 to $0.02 each, streaming into its window; "Is anything wrong in my mod log?" read the log. The Mods view showed the spending, the limit and the questions. A limit of $0.01 refused the next question with the reason, Paused refused it, and so did the withdrawn permission. With Pictures on, "What's on my screen?" was answered. The Test timer marked all 9 steps.
+
+| Finding | Notes |
+|---|---|
+| The Ask mod window was too short, and long answers ran off its bottom with no scroll bar | In REDnode: the page that draws mod windows set `rn-window` to `display: block`, which broke its flex layout, so the window's body could not scroll. **Fixed:** every mod window now scrolls when its content is taller than the window; the Ask mod window is taller (420 x 520) |
 
 ## Phases
 
