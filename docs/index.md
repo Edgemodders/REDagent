@@ -57,7 +57,7 @@ Before each change, the chat shows a card with the change as a diff: added lines
 | **Allow all in this chat** | This change and every later change in this chat are made without asking. **New chat** turns this off again |
 | **Deny** | Nothing changes. REDagent is told you said no, and asks what you want instead |
 
-REDagent backs up each file before it changes it. Every change it makes is listed in the chat with an **Undo** button. Undo puts the file back as it was, or removes a file REDagent created. REDagent is told about the undo when you next ask it something.
+REDagent backs up each file before it changes it. Every change it makes is listed in the chat with an **Undo** button. The strip above the input counts the chat's changes; **Show** lists them all, each with Undo, however far the chat has scrolled. Undo puts the file back as it was, or removes a file REDagent created, and any folder that is then empty. REDagent is told about the undo when you next ask it something.
 
 Backups are kept in `%APPDATA%\@rednode\overlay\packages\redagent\backups`.
 

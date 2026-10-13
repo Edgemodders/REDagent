@@ -11,7 +11,7 @@
 //     with Undo; calls that may change the game ask the player first.
 
 import { channel, kernel, pkg, secrets } from 'rednode';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { diffLines } from './diff.mjs';
 import { createRequire } from 'node:module';
@@ -221,11 +221,27 @@ async function confirmChange(name, input, toolUseID, signal) {
   return { behavior: 'allow', updatedInput: input };
 }
 
+// True when dir is strictly inside root.
+function isInside(root, dir) {
+  const rel = relative(root, dir);
+  return rel !== '' && !rel.startsWith('..') && !isAbsolute(rel);
+}
+
 function undo(editId) {
   const e = [...edits.values()].find((x) => x.id === editId);
   if (!e || e.undone) return;
   if (e.backup) copyFileSync(e.backup, e.file);
-  else rmSync(e.file, { force: true });
+  else {
+    rmSync(e.file, { force: true });
+    // Folders the new file needed, now empty, go too, up to the apps folder.
+    for (let dir = dirname(e.file); APPS_DIRS.some((d) => isInside(d, dir)); dir = dirname(dir)) {
+      try {
+        rmdirSync(dir); // fails when the folder is not empty
+      } catch {
+        break;
+      }
+    }
+  }
   e.undone = true;
   notes.push(`The player undid your change to ${shortPath(e.file)}${e.backup ? '; it is back to how it was before' : '; the new file was removed'}.`);
   post({ type: 'undone', id: editId });

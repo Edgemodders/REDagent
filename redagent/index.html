@@ -20,6 +20,13 @@
   /* Chat */
   .chat { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; }
   #log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+  /* Every change in this chat, with Undo, above the input: it never scrolls away */
+  .changes { border-top: 1px solid var(--rn-line); padding-top: 6px; font: 12px var(--rn-mono); color: var(--rn-dim); }
+  .changes-bar { display: flex; align-items: center; gap: 8px; }
+  .changes-bar .spacer { flex: 1; }
+  .changes-list { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; max-height: 140px; overflow-y: auto; }
+  .changes-list .changed { justify-content: space-between; }
+  .changes rn-button::part(button) { min-height: 22px; padding: 2px 8px; font-size: 11px; }
   .msg { font-size: 15px; line-height: 1.45; overflow-wrap: anywhere; }
   .msg p { margin: 0 0 8px; }
   .msg p:last-child { margin-bottom: 0; }
@@ -75,6 +82,10 @@
 
     <div class="chat" id="chat" hidden>
       <div id="log"></div>
+      <div class="changes" id="changes" hidden>
+        <div class="changes-bar"><span id="changes-count"></span><span class="spacer"></span><rn-button id="changes-toggle" variant="ghost">Show</rn-button></div>
+        <div class="changes-list" id="changes-list" hidden></div>
+      </div>
       <div class="ask">
         <rn-input id="prompt" placeholder="Ask REDagent... (Enter to send)"></rn-input>
         <rn-button id="send">Send</rn-button>

@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, is built; its in-game test is pending** (steps below). Then C6, REDagent in REDcode, planned with the REDcode session.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, except Undo, which is left for the next test (results below). Then C6, REDagent in REDcode, planned with the REDcode session.
 
 ## What it can do
 
@@ -181,6 +181,16 @@ Steps 1 and 2 are the same as the C2 test (deploy both, load a save, the key is 
 8. Ask: "Change your own briefing to say hello." It should say it may not change its own files.
 9. Press **New chat**, ask for a small change to the new mod: the card should come back (trust ends with the chat).
 10. Quit the game.
+
+**Result, 2026-10-12: passed, except Undo, which was not tried.** REDagent wrote a low-health warning mod: REDnode started the new package at once, and the mod ran and showed its warning. REDagent then fixed the crash mod (hot reload restarted it). It refused to change its own briefing, and after **New chat** the change cards came back. Prompt caching worked: after the first turn, each turn read 35,000 to 187,000 tokens from the cache and wrote at most 2,800. The 8 turns of the first chat cost **$0.50**, the whole test $0.54.
+
+| Finding | Notes |
+|---|---|
+| The Undo buttons scrolled out of reach while the mod was built | **Fixed:** a strip above the input counts this chat's changes; **Show** lists them all, each with Undo. Undoing a new file also removes the folders it needed, when they are empty |
+| Invisible parts of windows caught clicks (Hello mod's strip under its frame, rolled-up windows) | In REDnode, two causes. The plugin's transparency readback failed for every window whose width is not a multiple of 64, so those windows had no transparency map, and a window without one caught every click in its rectangle. **Fixed** in plugin 0.12.1; a window that has drawn nothing now lets clicks through |
+| The launcher tab and REDagent were invisible until hovered or switched off and on | In REDnode: with GPU sharing, a repaint request sends no frame when the page has not changed. **Fixed:** a repaint also draws a 1-pixel, almost transparent mark for two frames. Checked in the mock |
+| Closing a mod's window left no way to get it back | In REDnode: the launcher now shows "Window closed" with **Show** under the mod |
+| Request: a stopwatch in the game for timing test steps | Proposed: a small built-in app whose marks are written to the log |
 
 ## Phases
 

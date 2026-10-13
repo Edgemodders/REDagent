@@ -12,7 +12,7 @@ const log = $('log');
 let state = { hasKey: false, busy: false };
 let current = null; // the assistant message being streamed: { el, text }
 const tools = new Map(); // tool use id -> line element
-const changes = new Map(); // change id -> its "Changed" line
+const changes = new Map(); // change id -> { els: its "Changed" lines, undone }
 let editingKey = false;
 
 // ---------- Markdown, small and safe: everything is escaped first ----------
@@ -140,8 +140,36 @@ $('new').addEventListener('click', () => {
   if (state.busy) return;
   log.replaceChildren();
   current = null;
+  changes.clear();
+  $('changes-list').replaceChildren();
+  showChanges();
   channel.post({ type: 'new' });
 });
+
+// The changes strip above the input: how many files this chat changed, and the list
+// with Undo for each, so Undo stays in reach however far the chat scrolls.
+function showChanges() {
+  const all = [...changes.values()];
+  const undone = all.filter((c) => c.undone).length;
+  $('changes').hidden = !all.length;
+  $('changes-count').textContent = `${all.length} change${all.length === 1 ? '' : 's'} in this chat${undone ? ` · ${undone} undone` : ''}`;
+}
+$('changes-toggle').addEventListener('click', () => {
+  const list = $('changes-list');
+  list.hidden = !list.hidden;
+  $('changes-toggle').textContent = list.hidden ? 'Show' : 'Hide';
+});
+
+// A "Changed ..." line with Undo; one goes in the chat, one in the changes list.
+function changeLine(m) {
+  const el = div('changed', `<span>${m.created ? 'Created' : 'Changed'} <code>${esc(m.file)}</code></span>`);
+  const undo = document.createElement('rn-button');
+  undo.textContent = 'Undo';
+  undo.setAttribute('variant', 'ghost');
+  undo.addEventListener('click', () => channel.post({ type: 'undo', id: m.id }));
+  el.append(undo);
+  return el;
+}
 for (const b of document.querySelectorAll('[data-model]')) {
   b.addEventListener('click', () => channel.post({ type: 'model', model: b.dataset.model }));
 }
@@ -270,21 +298,23 @@ channel.on((m) => {
       break;
     }
     case 'changed': {
-      // A change was written: offer Undo.
-      const el = add(div('changed', `${m.created ? 'Created' : 'Changed'} <code>${esc(m.file)}</code> `));
-      const undo = document.createElement('rn-button');
-      undo.textContent = 'Undo';
-      undo.setAttribute('variant', 'ghost');
-      undo.addEventListener('click', () => channel.post({ type: 'undo', id: m.id }));
-      el.append(undo);
-      changes.set(m.id, el);
+      // A change was written: offer Undo, in the chat and in the changes list.
+      const inChat = add(changeLine(m));
+      const inList = changeLine(m);
+      $('changes-list').prepend(inList);
+      changes.set(m.id, { els: [inChat, inList], undone: false });
+      showChanges();
       break;
     }
     case 'undone': {
-      const el = changes.get(m.id);
-      if (el) {
-        el.querySelector('rn-button')?.remove();
-        el.append(Object.assign(document.createElement('span'), { className: 'answer', textContent: 'Undone' }));
+      const c = changes.get(m.id);
+      if (c) {
+        c.undone = true;
+        for (const el of c.els) {
+          el.querySelector('rn-button')?.remove();
+          el.append(Object.assign(document.createElement('span'), { className: 'answer', textContent: 'Undone' }));
+        }
+        showChanges();
       }
       break;
     }
