@@ -70,6 +70,18 @@ Each chat is saved as it goes, with its changes, so closing the game does not lo
 
 Chats are kept in `%APPDATA%\@rednode\overlay\packages\redagent\chats`.
 
+## Mods that ask REDagent
+
+Other mods can ask REDagent questions and show you the answers, for example a mod that suggests a build or explains an error. A mod can ask only once you allow its "questions to the AI assistant" permission in the REDnode launcher or Mod Manager.
+
+| What | How it works |
+|---|---|
+| What a mod's question may do | Only read: logs, the game state, the game API, overlay windows' text and your mods' files. It never changes your files or your game |
+| Pictures | Pictures of windows and of your screen are off for every mod. Switch **Pictures** on for a mod in the Mods view if you want it |
+| Model | Sonnet 5.5, whatever your chat uses, to keep it cheap |
+| Cost | Each mod has a daily limit, $0.25 unless you change it. Past it, the mod's questions are refused until the next day |
+| Control | **Chats**, then the **Mods** tab, lists each mod that has asked: what it spent today and in all, its limit (type a new one and press **Set**), **Paused** to stop it, **Pictures**, and its last questions |
+
 ## Your key and your data
 
 | What | Where it goes |

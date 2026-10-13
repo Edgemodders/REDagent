@@ -33,6 +33,19 @@
   .chat-title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .chat-meta { font: 11px var(--rn-mono); color: var(--rn-dim); }
   .chat-row .answer { font: 11px var(--rn-mono); color: var(--rn-dim); }
+  .tab { font: 600 11px var(--rn-mono); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; padding: 3px 8px;
+    color: var(--rn-dim); border: 1px solid transparent; background: transparent; }
+  .tab.on { color: var(--rn-accent); border-color: var(--rn-line); }
+  /* Mods that ask REDagent questions */
+  .mod-row { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; background: var(--rn-panel); border-left: 2px solid var(--rn-line); }
+  .mod-row.paused { border-left-color: var(--rn-danger); }
+  .mod-row .chat-meta.over { color: var(--rn-danger); }
+  .mod-row .controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .mod-row .limit { display: flex; align-items: center; gap: 6px; font: 11px var(--rn-mono); color: var(--rn-dim); }
+  .mod-row .limit input { width: 64px; font: 12px var(--rn-mono); color: var(--rn-fg); background: var(--rn-bg); border: 1px solid var(--rn-line); padding: 2px 4px; }
+  .mod-row rn-toggle { font-size: 12px; }
+  .mod-row rn-button::part(button) { min-height: 22px; padding: 2px 8px; font-size: 11px; }
+  .mod-row .recent { font: 11px/1.4 var(--rn-mono); color: var(--rn-dim); overflow-wrap: anywhere; }
   .chat-row rn-button::part(button), .history-head rn-button::part(button) { min-height: 22px; padding: 2px 8px; font-size: 11px; }
   /* Every change in this chat, with Undo, above the input: it never scrolls away */
   .changes { border-top: 1px solid var(--rn-line); padding-top: 6px; font: 12px var(--rn-mono); color: var(--rn-dim); }
@@ -96,7 +109,7 @@
 
     <div class="chat" id="chat" hidden>
       <div class="history" id="history" hidden>
-        <div class="history-head"><span>Earlier chats</span><span class="spacer"></span><rn-button id="history-close" variant="ghost">Close</rn-button></div>
+        <div class="history-head"><button class="tab on" id="tab-chats">Chats</button><button class="tab" id="tab-mods">Mods</button><span class="spacer"></span><rn-button id="history-close" variant="ghost">Close</rn-button></div>
         <div id="history-list"></div>
       </div>
       <div id="log"></div>

@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). **C4, polish, passed in game on 2026-10-13** (results below). Next in REDnode: O8 Mod Manager; then C5 or C6, agreed with the user.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). **C4, polish, passed in game on 2026-10-13** (results below). O8 Mod Manager in REDnode passed too. **C5, the agent API for mods, is built; its in-game test is pending** (steps below).
 
 ## What it can do
 
@@ -226,6 +226,35 @@ Use the **Test timer** (F10, switch it on in the launcher): press **Start**, the
 | At the first start, no earlier chat came back | Expected: chats from before C4 were never saved. From C4 on they are |
 | HDR not tried | The game ran in SDR. The HDR conversion has unit tests only. **Unverified** in game |
 | The Test timer was used only once | The player forgot it for the later steps; the logs' clock times were enough this time |
+
+## C5: what was built
+
+Decided with the user on 2026-10-13: a $0.25 daily limit per mod by default, Sonnet 5.5 for mod questions, and every read-only tool, with pictures of windows and the screen behind a switch per mod that starts off.
+
+| Piece | Where |
+|---|---|
+| Asking | In REDnode's `rednode` package: `agent.ask(prompt, { context, onText, signal })` resolves with `{ text, cost }`, streaming pieces to `onText`. Works in Node mods and overlay apps. The package needs `"permissions": ["agent"]`, allowed by the player in the launcher or the Mod Manager |
+| The broker | REDnode's host checks the permission and passes the question to the package that `"provides": ["agent"]` and has called `agent.serve`, then streams the answer back to the asker. A question unanswered after 5 minutes fails |
+| Answering | REDagent's manifest provides `agent`. Questions run one at a time, apart from the player's chat, on Sonnet 5.5, with a short briefing of their own, at most 8 turns, and read-only tools: Read, Glob, Grep, the kernel's read-only tools and `apps` list. Never Write, Edit, `api_call` or package changes. `window_image` and `game_image` only with the mod's Pictures switch on |
+| Limits | `mods.json` in REDagent's data folder: per mod, the daily limit, Paused, Pictures, spending today and in all, and the last 5 questions. The day is the player's local day. A paused mod, or one past its limit, is refused with the reason |
+| Mods view | **Chats** in the footer now opens a panel with two tabs, Chats and **Mods**. Mods lists each mod that asked: today's spending against its limit (red when reached), in all, a limit field with **Set**, **Paused** and **Pictures** switches, and its last questions |
+| Sample | REDnode's Ask mod: type a question, the answer streams in, with its cost |
+
+Tested in the mock game with the stand-in API: the Ask mod's question went through the host to REDagent and the answer streamed back with its cost and the mod's context; the stand-in saw Sonnet 5.5 and the read-only file tools. A mod without the permission was refused, and so was one past its daily limit. The Mods view showed the spending, the limit and the last question. Also found: Claude Code cannot start when the first apps folder does not exist; REDagent now creates it.
+
+## C5 test
+
+Use the **Test timer**: Start, then Mark after each step.
+
+1. Close the game. Deploy REDnode, then REDagent. Start the game and load a save.
+2. F10, open the **Mod Manager**, find **Ask mod**: switch it on, and allow "questions to the AI assistant" in its details. Mark.
+3. In the Ask mod window, ask: "Where am I, and what's a good thing to do nearby?" The answer streams in, with its cost. Mark.
+4. Ask: "Is anything wrong in my mod log?" It should read the log. Mark.
+5. In REDagent, press **Chats**, then the **Mods** tab: Ask mod shows today's spending, its limit and both questions. Mark.
+6. Set its daily limit to 0.01 and press **Set**, then ask the Ask mod anything: it should be refused with the reason. Set the limit back to 0.25. Mark.
+7. Switch **Paused** on and ask again: refused. Switch it off. Mark.
+8. Switch **Pictures** on and ask: "What's on my screen?" It may use a picture now. Mark.
+9. In the Mod Manager, withdraw Ask mod's permission and ask again: refused. Quit the game.
 
 ## Phases
 

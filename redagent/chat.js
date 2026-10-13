@@ -161,14 +161,77 @@ function clearChat() {
 
 // ---------- history: earlier chats, kept by the agent ----------
 
+let opening = false; // the player asked for the panel: the next list opens it
 $('history-button').addEventListener('click', () => {
-  if ($('history').hidden) channel.post({ type: 'history' });
+  opening = $('history').hidden;
+  if ($('history').hidden) channel.post({ type: panelTab === 'mods' ? 'mods' : 'history' });
   else showHistory(null);
 });
 $('history-close').addEventListener('click', () => showHistory(null));
 
+// The panel has two tabs: earlier chats, and the mods that ask REDagent questions.
+let panelTab = 'chats';
+function setTab(tab) {
+  panelTab = tab;
+  $('tab-chats').classList.toggle('on', tab === 'chats');
+  $('tab-mods').classList.toggle('on', tab === 'mods');
+  channel.post({ type: tab === 'mods' ? 'mods' : 'history' });
+}
+$('tab-chats').addEventListener('click', () => setTab('chats'));
+$('tab-mods').addEventListener('click', () => setTab('mods'));
+
+// Mods that asked REDagent questions: what each spent today and in all, its daily
+// limit, Pause, and whether its questions may use pictures of windows and the screen.
+function showMods(m) {
+  if (panelTab !== 'mods') return;
+  $('history').hidden = false;
+  $('log').hidden = true;
+  $('history-button').textContent = 'Back';
+  const list = $('history-list');
+  list.replaceChildren();
+  if (!m.mods.length) {
+    list.append(div('notice', 'No mod has asked REDagent anything yet. A mod asks with agent.ask once you allow its "questions to the AI assistant" permission in the launcher or the Mod Manager.'));
+  }
+  for (const mod of m.mods) {
+    const row = div(`mod-row${mod.paused ? ' paused' : ''}`);
+    row.append(div('chat-title', esc(mod.name ?? mod.id)));
+    row.append(
+      div(
+        `chat-meta${mod.today >= mod.limit ? ' over' : ''}`,
+        `Today $${mod.today.toFixed(3)} of $${mod.limit.toFixed(2)} &middot; in all $${mod.total.toFixed(3)}${mod.paused ? ' &middot; paused' : ''}`,
+      ),
+    );
+    const controls = div('controls');
+    const limit = div('limit', 'Daily limit $');
+    const field = document.createElement('input');
+    field.type = 'number';
+    field.min = '0';
+    field.step = '0.05';
+    field.value = mod.limit.toFixed(2);
+    const set = document.createElement('rn-button');
+    set.textContent = 'Set';
+    set.setAttribute('variant', 'ghost');
+    set.addEventListener('click', () => channel.post({ type: 'mod-settings', id: mod.id, limit: Number(field.value) }));
+    limit.append(field, set);
+    const toggle = (label, on, key) => {
+      const t = document.createElement('rn-toggle');
+      t.setAttribute('label', label);
+      if (on) t.setAttribute('checked', '');
+      t.addEventListener('change', (e) => channel.post({ type: 'mod-settings', id: mod.id, [key]: e.detail.checked }));
+      return t;
+    };
+    controls.append(limit, toggle('Paused', mod.paused, 'paused'), toggle('Pictures', mod.pictures, 'pictures'));
+    row.append(controls);
+    for (const r of mod.recent.slice(0, 3)) {
+      row.append(div('recent', `${new Date(r.at).toLocaleTimeString()} &middot; $${r.cost.toFixed(3)} &middot; ${esc(r.prompt)}`));
+    }
+    list.append(row);
+  }
+}
+
 // Shows the list of chats ({ current, chats }), or hides it (null).
 function showHistory(m) {
+  if (m && panelTab !== 'chats') return;
   $('history').hidden = !m;
   $('log').hidden = !!m;
   $('history-button').textContent = m ? 'Back' : 'Chats';
@@ -296,6 +359,11 @@ function handle(m) {
       break;
     case 'history':
       showHistory(m);
+      break;
+    case 'mods':
+      // Sent after every answer too: shown only while the panel is open, or when asked for.
+      if (panelTab === 'mods' && (opening || !$('history').hidden)) showMods(m);
+      opening = false;
       break;
     case 'status':
       state = m;

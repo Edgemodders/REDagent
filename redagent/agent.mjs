@@ -10,7 +10,7 @@
 //   - every change to a file is shown to the player as a diff and backed up first,
 //     with Undo; calls that may change the game ask the player first.
 
-import { channel, kernel, pkg, secrets } from 'rednode';
+import { agent, channel, kernel, pkg, secrets } from 'rednode';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { diffLines } from './diff.mjs';
@@ -428,6 +428,11 @@ async function canUseTool(name, input, { signal, toolUseID }) {
 
 // ---------- a turn ----------
 
+// Claude Code runs in the first apps folder; it cannot start in one that does not exist.
+function ensureWorkDir() {
+  mkdirSync(APPS_DIRS[0], { recursive: true });
+}
+
 function cleanEnv(key) {
   const env = {
     ...process.env,
@@ -472,6 +477,7 @@ async function ask(text) {
     return;
   }
   approveKey(key);
+  ensureWorkDir();
 
   const mcpServers = {};
   try {
@@ -630,6 +636,21 @@ channel.on(async (msg) => {
       case 'history':
         channel.post({ type: 'history', current: chat.id, chats: listChats() });
         break;
+      case 'mods':
+        postMods();
+        break;
+      case 'mod-settings': {
+        const st = modSettings[msg.id] && modState(msg.id);
+        if (st) {
+          if (Number.isFinite(Number(msg.limit)) && Number(msg.limit) >= 0) st.limit = Math.min(100, Number(msg.limit));
+          if (typeof msg.paused === 'boolean') st.paused = msg.paused;
+          if (typeof msg.pictures === 'boolean') st.pictures = msg.pictures;
+          saveMods();
+          console.log(`Mod ${msg.id}: limit $${st.limit.toFixed(2)} a day${st.paused ? ', paused' : ''}${st.pictures ? ', pictures on' : ''}`);
+        }
+        postMods();
+        break;
+      }
       case 'open-chat':
         if (!running && String(msg.id) !== chat.id) {
           saveChat();
@@ -660,5 +681,129 @@ if (latest) {
     console.log(`Could not open the last chat: ${err.message}`);
   }
 }
+// ---------- questions from other mods (C5) ----------
+//
+// Mods that ask for the "agent" permission, once the player allows it, ask with
+// agent.ask in the rednode package; the host passes their questions here. They are
+// answered one at a time, apart from the player's chat, on Sonnet 5.5, with
+// read-only tools: never files written or the game changed. Pictures (window and
+// game screen) are off unless the player switches them on for that mod. Each mod
+// has a daily spending limit, $0.25 unless the player sets another, and can be
+// paused, in the Mods view.
+
+const MOD_MODEL = 'claude-sonnet-5-5';
+const DAILY_LIMIT = 0.25;
+const MODS_FILE = join(pkg.dataDir, 'mods.json');
+const PICTURES = ['window_image', 'game_image'].map((t) => KERNEL + t);
+
+let modSettings = {};
+try {
+  modSettings = JSON.parse(readFileSync(MODS_FILE, 'utf8'));
+} catch {
+  // none yet
+}
+const saveMods = () => writeFileSync(MODS_FILE, JSON.stringify(modSettings, null, 2));
+const localDay = () => new Date().toLocaleDateString('sv'); // YYYY-MM-DD, the player's own day
+
+function modState(id, name) {
+  const st = (modSettings[id] ??= { limit: DAILY_LIMIT, paused: false, pictures: false, day: '', today: 0, total: 0, recent: [] });
+  if (name) st.name = name;
+  if (st.day !== localDay()) {
+    st.day = localDay();
+    st.today = 0;
+  }
+  return st;
+}
+
+function postMods() {
+  const mods = Object.entries(modSettings).map(([id, st]) => ({ id, ...modState(id) }));
+  channel.post({ type: 'mods', mods: mods.sort((a, b) => (b.recent[0]?.at ?? 0) - (a.recent[0]?.at ?? 0)) });
+}
+
+function modBriefing(from) {
+  return `You are REDagent, powered by Claude, inside Cyberpunk 2077 with REDnode. The REDnode mod "${from.name}" (id ${from.id}) asks you a question for its player, and shows your answer in its own window.
+- Answer the question briefly and directly, in plain text or simple Markdown: a few sentences unless it needs more.
+- You can only read: REDnode's logs, the game state, the game API (look a function up with gameapi_lookup before api_get), overlay windows and the files in the apps folders. You cannot change files or the game, and you cannot ask the player anything.
+- Each tool call costs the player. Use tools only when the answer needs live data; context the mod sends comes with the question.
+- If the mod asks for something you cannot do, say so in one sentence.`;
+}
+
+let modQueue = Promise.resolve();
+
+async function answerMod(req, st) {
+  const key = await secrets.get(KEY);
+  if (!key) throw new Error('REDagent has no API key yet. The player adds it in the REDagent window.');
+  approveKey(key);
+  ensureWorkDir();
+  const mcpServers = {};
+  try {
+    const m = await kernel.mcp();
+    mcpServers.rednode = { type: 'http', url: m.url, headers: m.headers };
+  } catch {
+    // without REDnode's tools: the model and the mod's context only
+  }
+  const readOnly = new Set([...READ_TOOLS, ...READ_ONLY.filter((t) => st.pictures || !PICTURES.includes(t))]);
+  const canUse = async (name, input) => {
+    if (readOnly.has(name)) return { behavior: 'allow', updatedInput: input };
+    if (name === `${KERNEL}apps` && (!input.action || input.action === 'list')) return { behavior: 'allow', updatedInput: input };
+    return { behavior: 'deny', message: 'Questions from mods may only read; this tool is not available to them.' };
+  };
+  const prompt =
+    req.context === undefined ? req.prompt : `${req.prompt}\n\nContext from the mod (JSON):\n${JSON.stringify(req.context).slice(0, 8000)}`;
+  const stop = new AbortController();
+  req.signal.addEventListener('abort', () => stop.abort());
+  console.log(`Question from ${req.from.name}: ${req.prompt.replace(/\s+/g, ' ').slice(0, 80)}`);
+  let text = '';
+  let cost = 0;
+  for await (const m of query({
+    prompt,
+    options: {
+      pathToClaudeCodeExecutable: CLAUDE_EXE,
+      env: cleanEnv(key),
+      cwd: APPS_DIRS[0],
+      additionalDirectories: APPS_DIRS.slice(1),
+      settingSources: [],
+      systemPrompt: modBriefing(req.from),
+      model: MOD_MODEL,
+      tools: READ_TOOLS,
+      permissionMode: 'default',
+      canUseTool: canUse,
+      hooks: { PreToolUse: [fileGuard] },
+      mcpServers,
+      includePartialMessages: true,
+      abortController: stop,
+      maxTurns: 8,
+    },
+  })) {
+    if (m.type === 'stream_event' && m.event.type === 'content_block_delta' && m.event.delta?.type === 'text_delta') {
+      text += m.event.delta.text;
+      req.write(m.event.delta.text);
+    } else if (m.type === 'result') {
+      cost = m.total_cost_usd ?? 0;
+      if (m.is_error) throw new Error(String(m.result ?? m.subtype).replaceAll(key, '***'));
+    }
+  }
+  st.today += cost;
+  st.total += cost;
+  st.recent = [{ at: Date.now(), prompt: req.prompt.replace(/\s+/g, ' ').slice(0, 120), cost }, ...st.recent].slice(0, 5);
+  saveMods();
+  postMods();
+  console.log(`Answered ${req.from.name} for $${cost.toFixed(4)} (today $${st.today.toFixed(3)} of $${st.limit.toFixed(2)})`);
+  return { text, cost };
+}
+
+agent.serve(async (req) => {
+  const st = modState(req.from.id, req.from.name);
+  saveMods();
+  if (st.paused) throw new Error('The player has paused this mod in REDagent.');
+  if (st.today >= st.limit) throw new Error(`This mod has reached its daily limit of $${st.limit.toFixed(2)} in REDagent.`);
+  const run = modQueue.then(() => {
+    if (req.signal.aborted) throw new Error('Stopped.');
+    return answerMod(req, st);
+  });
+  modQueue = run.catch(() => {});
+  return run;
+});
+
 console.log(`REDagent ready (${MODELS.find((x) => x.id === settings.model)?.name ?? settings.model})${chat.events.length ? `, chat "${chat.title}"` : ''}`);
 status();
