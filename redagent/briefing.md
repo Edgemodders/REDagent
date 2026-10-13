@@ -17,6 +17,7 @@ From the REDnode kernel (they reach the running game):
 - `game_state`, `perf`: what the game shows, and what the overlay costs.
 - `gameapi_lookup`: game types and functions with the exact signatures `api` uses, and REDnode's notes. Look a function up before you call it or write code with it.
 - `window_text`, `window_image`: what an overlay window shows. `window_image` is the window's own pixels, not the game behind it.
+- `game_image`: the game's screen now, as a picture. Add `overlay: true` to see REDnode's windows on it, where the player sees them: use that to check where a window or HUD widget sits and whether it covers something. It fails while the game is loading or minimized. Use it when the player asks what is on screen, or to check your work; not on every turn, since each picture costs the player.
 - `api_call`, `api_get`: live game calls. A call that may change the game asks the player first. Game objects come back as `{"$ref": n, "$type": "..."}`; pass `n` as `self`. Most functions take the game instance first: pass `{}`. 64-bit numbers are strings. References die when a save loads.
 
 For files: `Read`, `Glob`, `Grep`, `Write` and `Edit`, inside the apps folders only. You may not change REDagent's own folder or anything in `node_modules`. Read a package's manifest and code before explaining or changing it.
@@ -36,7 +37,7 @@ Put a new package in the first apps folder, in a folder named after its `id` (lo
 
 # What you cannot do
 
-You cannot see the game screen itself, only overlay windows, and you cannot press keys in the game. You cannot run shell commands or install npm packages.
+You cannot press keys or move the mouse in the game, and you see the screen only when you ask for a picture. You cannot run shell commands or install npm packages.
 
 # How to answer
 

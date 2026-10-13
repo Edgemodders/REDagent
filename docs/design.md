@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). Then C6, REDagent in REDcode, planned with the REDcode session.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). **C4, polish, is built; its in-game test is pending** (steps below). Then C5 or C6, agreed with the user.
 
 ## What it can do
 
@@ -195,6 +195,30 @@ Steps 1 and 2 are the same as the C2 test (deploy both, load a save, the key is 
 
 **Second test, 2026-10-12: passed.** With REDnode plugin 0.12.1: the launcher tab and REDagent showed at start; clicks passed through transparent areas and below rolled-up windows (every one of 51 presses found a transparency map); a closed Hello mod window came back with **Show**; scrollbars were thin and followed the theme; **Undo** from the changes strip restored `low-health/index.html`, and REDagent knew what was undone.
 
+## C4: what was built
+
+| Piece | Where |
+|---|---|
+| Chat history | Each chat is a file in REDagent's data folder (`chats/`): its Claude Code session, its cost, its changes (for Undo, which works after a restart too), notes for Claude such as an undo, and what the chat window showed, as compact events. It is saved half a second after each change, so a game closed mid-turn keeps the chat up to that moment. The latest chat comes back when the game starts. **Chats** in the footer lists the last 30, with Open and Delete; **New** starts another. A card left waiting when the game closed shows "Not answered". "Allow all in this chat" is never restored. A chat whose Claude session is gone starts afresh, with a notice |
+| The game's screen | In REDnode (plugin 0.13.0): the MCP tool `game_image` copies the game's back buffer on the GPU, before the overlay is drawn (the game alone) or after it (`overlay: true`, what the player sees), scales it to at most 1280 pixels wide on a worker thread, and converts HDR to SDR. REDagent may use it without asking, like `window_image`; the briefing says when it is worth the cost |
+| From the tests | The Test timer app in REDnode (Start, Mark, notes, all written to the log). While a card waits for the player, the chat's status line says WAITING FOR YOU instead of WORKING, and that line always stays below the newest card. The footer fits one line: **Chats**, **New**, **Key**, and the total |
+
+Tested in the mock game with the stand-in API: a chat with a created file came back after the host restarted, with the card's answer, the cost line and Undo; Undo after the restart removed the file; **Chats** listed the chat, **New** started an empty one, and **Open** brought the first back and continued its Claude session, with the saved undo note sent on the next question. `game_image` returned the mock's frame as a JPEG, with and without the overlay. The capture's scaling, channel order, HDR conversion and base64 have unit tests in REDnode; the GPU copy itself can only be tested in the game.
+
+## C4 test
+
+Use the **Test timer** (F10, switch it on in the launcher): press **Start**, then **Mark** after each step. No pauses needed.
+
+1. Close the game. Deploy REDnode, then REDagent. Start the game and load a save.
+2. REDagent shows your last chat from before (the low-health one). Mark.
+3. Ask: "What's on my screen right now?" It should use `game_image` and describe the scene. Mark.
+4. Ask: "Look at the screen with the overlay: where is the Hello mod window, and does it cover anything?" Mark.
+5. Ask for a small change, such as "Make the low-health warning say LOW HP". While the card waits, the line under it says WAITING FOR YOU. Allow it. Mark.
+6. Press **Chats**: the list shows your chats. Press **New**, ask something short, then **Chats** and **Open** the earlier chat. Ask: "What did we change last?" It should know. Mark.
+7. Quit the game, start it again and load a save. The chat is back; press **Show** in the changes strip and **Undo** the change from step 5. Mark.
+8. Optional, if your display does HDR: turn HDR on in the game's settings and repeat step 3. Colors should look about right. Mark.
+9. Quit the game.
+
 ## Phases
 
 Each phase ends with an in-game test, as in REDnode.
@@ -204,6 +228,6 @@ Each phase ends with an in-game test, as in REDnode.
 | **C1 Kernel MCP server** (REDnode repo) | The read-only tools on localhost with a token, and `api_call` with confirmation | From Claude Code on the desktop, while the game runs: "what's V's health?", "show the Mod log errors", "capture the Hello mod window" |
 | **C2 Chat in the game** | The REDagent package: a streaming chat window built with the UI kit, key setup, model choice, cost meter. Starts with a spike: the Agent SDK inside a mod process | Questions asked in the game get answers built from live tool calls |
 | **C3 Authoring** | Claude Code's Write and Edit tools, kept to the apps folders (never REDagent itself or `node_modules`); a diff card for every change with Allow, Deny and "Allow edits for this chat"; a backup of every file before it changes, with Undo; REDnode starting new packages and manifest changes without a restart; the briefing's write, hot reload, check, fix loop. No "files" permission: Node mods have full Node access, so REDnode cannot enforce one; REDagent limits itself | "Make a mod that warns me below 30% health" goes from request to a working mod in the game. "Fix the crash mod's Throw button" fixes it |
-| **C4 Polish** | Session history, prompt caching for cost, a capture of the game's frame (native), and what the tests teach | To be decided |
+| **C4 Polish** | Chat history kept on disk and a list of earlier chats; a capture of the game's frame (native, REDnode's `game_image`); what the tests teach (the Test timer app, a "waiting for you" line). Prompt caching turned out to be automatic (C2) | A chat survives a restart of the game; REDagent describes the game's screen |
 | **C5 Agent API for mods** | A `rednode` API for other mods to use REDagent, brokered by the host: for example `agent.ask(prompt, { context })`, streaming the answer back. A mod must ask for the `agent` permission, the player grants it in the launcher, and spending limits apply per mod, since every call costs the player | A sample mod asks REDagent a question and shows the answer; a mod without the permission is refused |
 | **C6 REDagent in REDcode** | REDagent's agent split into a core package shared by two front ends: the in-game chat, and a REDagent view in REDcode's activity bar, beside REDnode's views. In the editor, edits show in VS Code's diff editor. The same briefing, kernel tools and settings. REDbridge's WolvenKit editing operations, exposed as MCP tools by REDbridge (being added in the REDcode session), give the same agent archive and asset work | From REDcode: "make a mod that ..." produces a working mod in the running game, with edits reviewed in VS Code |

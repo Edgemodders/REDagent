@@ -6,7 +6,7 @@ REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fix
 
 REDagent reads what is already installed, writes the mod, and shows you every change before it is made. REDnode loads the mod a moment later. REDagent then reads the mod's log, checks its window and the game's answers, and fixes what is wrong.
 
-> **Status:** an early developer build. The chat (phase C2) and writing mods (phase C3) passed their in-game tests. There is no packaged release yet.
+> **Status:** an early developer build. The chat (phase C2) and writing mods (phase C3) passed their in-game tests. Chat history and seeing the game's screen (phase C4) are built and waiting for theirs. There is no packaged release yet.
 
 ## What it can do
 
@@ -15,11 +15,12 @@ REDagent reads what is already installed, writes the mod, and shows you every ch
 | "What's in my mod log?" | Reads the REDnode Mod log, including crashes, and explains them |
 | "What are V's health, level and money?" | Looks up the game functions and calls the running game. It asks you first before any call that could change the game |
 | "What does the Hello mod window show?" | Captures that overlay window and reads it |
+| "What's on my screen?" | Takes a picture of the game's screen, with or without REDnode's windows, and describes it |
 | "Why does the crash mod break?" | Reads the mod's files and explains the code |
 | "Make a mod that ..." | Creates a new REDnode package, waits for it to load, checks it runs, and fixes it |
 | "Fix the Throw button" | Changes the file, then checks the log again |
 
-It cannot see the game screen itself, only REDnode's overlay windows. It cannot press keys in the game, run commands or install npm packages.
+It sees the game's screen only when it takes a picture, which it does when it needs one. It cannot press keys or move the mouse in the game, run commands or install npm packages.
 
 ## What you need
 
@@ -61,18 +62,26 @@ REDagent backs up each file before it changes it. Every change it makes is liste
 
 Backups are kept in `%APPDATA%\@rednode\overlay\packages\redagent\backups`.
 
+## Chats are kept
+
+Each chat is saved as it goes, with its changes, so closing the game does not lose it. The last chat comes back when the game starts, and Undo still works on its changes. **Chats** lists the last 30 chats: **Open** one to see it and carry on where you left off, or **Delete** it. **New** starts a fresh chat. "Allow all in this chat" is never brought back: you give it again when you want it.
+
+Chats are kept in `%APPDATA%\@rednode\overlay\packages\redagent\chats`.
+
 ## Your key and your data
 
 | What | Where it goes |
 |---|---|
 | Your API key | Stored encrypted with your Windows account, by REDnode. It is only used to talk to Anthropic and is never shown again. **Key** in the chat's footer replaces it |
 | Your questions and REDagent's answers | Sent to Anthropic's API, as with any Claude API use |
-| What REDagent reads to answer | Also sent to Anthropic: mod logs, values from the game, images of overlay windows, and the files it reads from the apps folders |
+| What REDagent reads to answer | Also sent to Anthropic: mod logs, values from the game, pictures of overlay windows and of the game's screen, and the files it reads from the apps folders |
 | Everything else | Stays on your PC. REDagent does not send telemetry |
 
 ## What it costs
 
 You pay Anthropic per use. Each answer shows its own cost under it in dim text, next to the chat's running total. The footer shows the chat's total too.
+
+A picture of the game's screen costs about as much as a page of text. REDagent takes one when it needs to see, not on every question.
 
 | Model | Use it for |
 |---|---|

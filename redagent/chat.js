@@ -14,6 +14,7 @@ let current = null; // the assistant message being streamed: { el, text }
 const tools = new Map(); // tool use id -> line element
 const changes = new Map(); // change id -> { els: its "Changed" lines, undone }
 let editingKey = false;
+let working = null; // the "WORKING..." line while a turn runs
 
 // ---------- Markdown, small and safe: everything is escaped first ----------
 
@@ -71,6 +72,7 @@ const atBottom = () => log.scrollHeight - log.scrollTop - log.clientHeight < 40;
 function add(el) {
   const stick = atBottom();
   log.append(el);
+  if (working && el !== working) log.append(working); // "working" stays last, below cards
   if (stick) log.scrollTop = log.scrollHeight;
   return el;
 }
@@ -97,7 +99,11 @@ function renderCurrent() {
   toRender.add(current);
 }
 
-let working = null;
+// While a card waits for the player, the line says so instead.
+function waiting(on) {
+  if (working) working.textContent = on ? 'WAITING FOR YOU...' : 'WORKING...';
+}
+
 function setWorking(on) {
   if (on && !working) working = add(div('working', 'WORKING...'));
   if (!on && working) {
@@ -120,7 +126,7 @@ function show() {
     if (b.dataset.model === state.model) b.removeAttribute('variant');
     else b.setAttribute('variant', 'ghost');
   }
-  $('cost').textContent = `Chat total: $${(state.cost ?? 0).toFixed(3)}`;
+  $('cost').textContent = `Total $${(state.cost ?? 0).toFixed(3)}`;
 }
 
 function send() {
@@ -138,13 +144,101 @@ $('prompt').addEventListener('submit', send);
 $('stop').addEventListener('click', () => channel.post({ type: 'stop' }));
 $('new').addEventListener('click', () => {
   if (state.busy) return;
+  clearChat();
+  showHistory(null);
+  channel.post({ type: 'new' });
+});
+
+function clearChat() {
   log.replaceChildren();
   current = null;
+  working = null;
+  tools.clear();
   changes.clear();
   $('changes-list').replaceChildren();
   showChanges();
-  channel.post({ type: 'new' });
+}
+
+// ---------- history: earlier chats, kept by the agent ----------
+
+$('history-button').addEventListener('click', () => {
+  if ($('history').hidden) channel.post({ type: 'history' });
+  else showHistory(null);
 });
+$('history-close').addEventListener('click', () => showHistory(null));
+
+// Shows the list of chats ({ current, chats }), or hides it (null).
+function showHistory(m) {
+  $('history').hidden = !m;
+  $('log').hidden = !!m;
+  $('history-button').textContent = m ? 'Back' : 'Chats';
+  if (!m) return;
+  const list = $('history-list');
+  list.replaceChildren();
+  if (!m.chats.length) list.append(div('notice', 'No chats yet.'));
+  for (const c of m.chats) {
+    const row = div('chat-row');
+    const text = div('chat-text');
+    text.append(div('chat-title', esc(c.title)));
+    text.append(div('chat-meta', `${new Date(c.updated).toLocaleString()} &middot; $${(c.cost ?? 0).toFixed(3)}`));
+    row.append(text);
+    if (c.id === m.current) {
+      row.append(div('answer', 'This chat'));
+    } else {
+      const open = document.createElement('rn-button');
+      open.textContent = 'Open';
+      open.addEventListener('click', () => {
+        if (state.busy) return;
+        showHistory(null);
+        channel.post({ type: 'open-chat', id: c.id });
+      });
+      const del = document.createElement('rn-button');
+      del.textContent = 'Delete';
+      del.setAttribute('variant', 'ghost');
+      del.addEventListener('click', () => channel.post({ type: 'delete-chat', id: c.id }));
+      row.append(open, del);
+    }
+    list.append(row);
+  }
+}
+
+// Draws a saved chat again from the agent's record of it.
+function replay(events) {
+  clearChat();
+  for (const e of events) {
+    switch (e.type) {
+      case 'user':
+        log.append(div('msg user', esc(e.text).replace(/\n/g, '<br>')));
+        break;
+      case 'text':
+        if (e.text) log.append(div('msg agent', markdown(e.text)));
+        break;
+      case 'tool':
+        handle({ type: 'tool', id: e.id, name: e.name });
+        handle({ type: 'tool-input', id: e.id, input: e.input });
+        if (e.error) handle({ type: 'tool-done', id: e.id, error: true });
+        break;
+      case 'changed':
+        handle(e);
+        if (e.undone) handle({ type: 'undone', id: e.id });
+        break;
+      case 'turn-end':
+        if (e.error) log.append(div('error', esc(e.error)));
+        if (e.cost > 0) log.append(costLine(e));
+        break;
+      default:
+        handle(e); // cards (with their answers), notices, errors
+        break;
+    }
+  }
+  current = null;
+  setWorking(!!state.busy);
+  if (state.hasKey && state.tools && state.tools !== 'ok') add(div('notice tools', esc(`REDnode's tools are off: ${state.tools}`)));
+  log.scrollTop = log.scrollHeight;
+}
+
+// What one answer cost, beside the chat's running total, so the two are not confused.
+const costLine = (m) => div('turn-cost', `This answer: $${m.cost.toFixed(3)} &middot; chat total $${(m.chatCost ?? 0).toFixed(3)}`);
 
 // The changes strip above the input: how many files this chat changed, and the list
 // with Undo for each, so Undo stays in reach however far the chat scrolls.
@@ -193,8 +287,16 @@ $('save-key').addEventListener('click', () => {
 
 // ---------- messages from the agent ----------
 
-channel.on((m) => {
+channel.on(handle);
+
+function handle(m) {
   switch (m?.type) {
+    case 'restore':
+      replay(m.events ?? []);
+      break;
+    case 'history':
+      showHistory(m);
+      break;
     case 'status':
       state = m;
       show();
@@ -245,11 +347,13 @@ channel.on((m) => {
       const answer = (yes) => {
         channel.post({ type: 'confirm', id: m.id, allow: yes });
         row.replaceWith(div('answer', yes ? 'Allowed' : 'Denied'));
+        waiting(false);
       };
       allow.addEventListener('click', () => answer(true));
       deny.addEventListener('click', () => answer(false));
       row.append(allow, deny);
-      card.append(row);
+      card.append(m.answer ? div('answer', esc(m.answer)) : row);
+      waiting(!m.answer);
       break;
     }
     case 'change': {
@@ -290,11 +394,13 @@ channel.on((m) => {
         b.addEventListener('click', () => {
           channel.post({ type: 'confirm', id: m.id, allow: answerWith });
           row.replaceWith(div('answer', answerWith === 'all' ? 'Allowed, with every change in this chat' : answerWith ? 'Allowed' : 'Denied'));
+          waiting(false);
         });
         return b;
       };
       row.append(button('Allow', true), button('Allow all in this chat', 'all', true), button('Deny', false, true));
-      card.append(row);
+      card.append(m.answer ? div('answer', esc(m.answer)) : row);
+      waiting(!m.answer);
       break;
     }
     case 'changed': {
@@ -322,10 +428,7 @@ channel.on((m) => {
       current = null;
       setWorking(false);
       if (m.error) add(div('error', esc(m.error)));
-      // What this answer cost, beside the chat's running total, so the two are not confused.
-      if (m.cost > 0) {
-        add(div('turn-cost', `This answer: $${m.cost.toFixed(3)} &middot; chat total $${(m.chatCost ?? 0).toFixed(3)}`));
-      }
+      if (m.cost > 0) add(costLine(m));
       state.busy = false;
       state.cost = m.chatCost;
       show();
@@ -339,7 +442,7 @@ channel.on((m) => {
     default:
       break;
   }
-});
+}
 
 channel.post({ type: 'hello' });
 })();

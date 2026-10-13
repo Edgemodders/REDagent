@@ -23,6 +23,17 @@
   #log { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
   #log > * { min-width: 0; max-width: 100%; }
   .msg code, .tool, .tool .args, .changed code { overflow-wrap: anywhere; }
+  /* Earlier chats, in place of the log */
+  .history { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; }
+  .history-head { display: flex; align-items: center; font: 600 11px var(--rn-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--rn-dim); }
+  .history-head .spacer { flex: 1; }
+  #history-list { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
+  .chat-row { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--rn-panel); border-left: 2px solid var(--rn-line); }
+  .chat-text { flex: 1; min-width: 0; }
+  .chat-title { font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .chat-meta { font: 11px var(--rn-mono); color: var(--rn-dim); }
+  .chat-row .answer { font: 11px var(--rn-mono); color: var(--rn-dim); }
+  .chat-row rn-button::part(button), .history-head rn-button::part(button) { min-height: 22px; padding: 2px 8px; font-size: 11px; }
   /* Every change in this chat, with Undo, above the input: it never scrolls away */
   .changes { border-top: 1px solid var(--rn-line); padding-top: 6px; font: 12px var(--rn-mono); color: var(--rn-dim); }
   .changes-bar { display: flex; align-items: center; gap: 8px; }
@@ -69,7 +80,7 @@
   .bottom { display: flex; align-items: center; gap: 6px; padding: 6px 14px 9px; flex-wrap: wrap; }
   .bottom .spacer { flex: 1; }
   .bottom .cost { font: 11px var(--rn-mono); color: var(--rn-dim); opacity: .8; letter-spacing: .06em; }
-  .bottom rn-button::part(button) { min-height: 26px; padding: 3px 9px; font-size: 11px; }
+  .bottom rn-button::part(button) { min-height: 26px; padding: 3px 8px; font-size: 11px; }
 </style>
 </head>
 <body>
@@ -84,6 +95,10 @@
     </div>
 
     <div class="chat" id="chat" hidden>
+      <div class="history" id="history" hidden>
+        <div class="history-head"><span>Earlier chats</span><span class="spacer"></span><rn-button id="history-close" variant="ghost">Close</rn-button></div>
+        <div id="history-list"></div>
+      </div>
       <div id="log"></div>
       <div class="changes" id="changes" hidden>
         <div class="changes-bar"><span id="changes-count"></span><span class="spacer"></span><rn-button id="changes-toggle" variant="ghost">Show</rn-button></div>
@@ -100,8 +115,9 @@
       <rn-button data-model="claude-opus-5-5" variant="ghost">Opus 5.5</rn-button>
       <rn-button data-model="claude-sonnet-5-5" variant="ghost">Sonnet 5.5</rn-button>
       <span class="spacer"></span>
-      <span class="cost" id="cost" title="What this chat has cost so far">Chat total: $0.000</span>
-      <rn-button id="new" variant="ghost">New chat</rn-button>
+      <span class="cost" id="cost" title="What this chat has cost so far">Total $0.000</span>
+      <rn-button id="history-button" variant="ghost" title="Earlier chats">Chats</rn-button>
+      <rn-button id="new" variant="ghost" title="Start a new chat">New</rn-button>
       <rn-button id="key-button" variant="ghost">Key</rn-button>
     </div>
   </rn-window>

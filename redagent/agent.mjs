@@ -11,7 +11,7 @@
 //     with Undo; calls that may change the game ask the player first.
 
 import { channel, kernel, pkg, secrets } from 'rednode';
-import { copyFileSync, existsSync, mkdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { diffLines } from './diff.mjs';
 import { createRequire } from 'node:module';
@@ -34,15 +34,18 @@ const APPS_DIRS = pkg.appsDirs.map((d) => resolve(d));
 
 // Read-only kernel tools run without asking. The rest ask the player, or are refused.
 const KERNEL = 'mcp__rednode__';
-const READ_ONLY = ['logs', 'game_state', 'perf', 'gameapi_lookup', 'window_text', 'window_image', 'api_get'].map(
+const READ_ONLY = ['logs', 'game_state', 'perf', 'gameapi_lookup', 'window_text', 'window_image', 'game_image', 'api_get'].map(
   (t) => KERNEL + t,
 );
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const WRITE_TOOLS = ['Write', 'Edit'];
 const FILE_TOOLS = [...READ_TOOLS, ...WRITE_TOOLS];
 const BACKUPS = join(pkg.dataDir, 'backups');
+const CHATS = join(pkg.dataDir, 'chats');
+const KEEP_CHATS = 30;
 
 mkdirSync(CONFIG_DIR, { recursive: true });
+mkdirSync(CHATS, { recursive: true });
 
 // ---------- settings and state ----------
 
@@ -66,7 +69,135 @@ const edits = new Map(); // tool use id -> { id, file, backup | null, undone }
 let nextEdit = 1;
 const notes = []; // told to Claude at the start of the next turn, such as an undo
 
-const post = (msg) => channel.post(msg);
+// ---------- chats: kept on disk, so a chat survives a restart of the game ----------
+//
+// Each chat is a file in the data folder: its Claude Code session (resumed on the
+// next question), its cost, its changes (for Undo), and what the chat window
+// showed, as compact events the window replays.
+
+let chat = newChat();
+
+function newChat() {
+  return { id: `${Date.now()}`, title: '', created: Date.now(), updated: Date.now(), events: [] };
+}
+
+function saveChat() {
+  if (!chat.events.length) return; // an empty chat is not worth a file
+  chat.updated = Date.now();
+  chat.sessionId = sessionId;
+  chat.cost = chatCost;
+  chat.model = settings.model;
+  chat.notes = [...notes];
+  chat.edits = [...edits].map(([toolUseID, e]) => ({ toolUseID, ...e }));
+  writeFileSync(join(CHATS, `${chat.id}.json`), JSON.stringify(chat));
+}
+
+const chatFile = (id) => join(CHATS, `${String(id).replace(/[^\d]/g, '')}.json`);
+
+function listChats() {
+  const all = [];
+  for (const f of readdirSync(CHATS)) {
+    if (!f.endsWith('.json')) continue;
+    try {
+      const c = JSON.parse(readFileSync(join(CHATS, f), 'utf8'));
+      all.push({ id: c.id, title: c.title || 'Untitled', updated: c.updated, cost: c.cost ?? 0 });
+    } catch {
+      // a damaged file: skipped
+    }
+  }
+  return all.sort((a, b) => b.updated - a.updated);
+}
+
+function forgetOldChats() {
+  for (const c of listChats().slice(KEEP_CHATS)) rmSync(chatFile(c.id), { force: true });
+}
+
+// Makes a saved chat the current one.
+function openChat(id) {
+  const c = JSON.parse(readFileSync(chatFile(id), 'utf8'));
+  chat = { id: c.id, title: c.title, created: c.created, updated: c.updated, events: c.events ?? [] };
+  sessionId = c.sessionId ?? null;
+  chatCost = c.cost ?? 0;
+  notes.length = 0;
+  notes.push(...(c.notes ?? []));
+  edits.clear();
+  for (const e of c.edits ?? []) {
+    const { toolUseID, ...rest } = e;
+    edits.set(toolUseID, rest);
+  }
+  nextEdit = Math.max(1, ...[...edits.values()].map((e) => e.id + 1));
+  // Card ids continue after the restored ones, so an old card never answers a new question.
+  nextConfirm = Math.max(nextConfirm, ...chat.events.filter((e) => typeof e.id === 'number').map((e) => e.id + 1));
+  trustEdits = false; // trust is never restored: the player gives it again
+  // No turn runs in a chat just opened: a card left waiting can no longer be answered.
+  for (const e of chat.events) if ((e.type === 'confirm' || e.type === 'change') && !e.answer) e.answer = 'Not answered';
+}
+
+// What the chat window showed, kept as it happens.
+function record(msg) {
+  const ev = chat.events;
+  const last = ev[ev.length - 1];
+  const find = (type, id) => ev.findLast((e) => e.type === type && e.id === id);
+  switch (msg.type) {
+    case 'text-start':
+      ev.push({ type: 'text', text: '' });
+      break;
+    case 'delta':
+      if (last?.type === 'text') last.text += msg.text;
+      else ev.push({ type: 'text', text: msg.text });
+      break;
+    case 'tool':
+      ev.push({ type: 'tool', id: msg.id, name: msg.name, input: '', error: false });
+      break;
+    case 'tool-input': {
+      const t = find('tool', msg.id);
+      if (t) t.input = msg.input;
+      break;
+    }
+    case 'tool-done': {
+      const t = find('tool', msg.id);
+      if (t) t.error = msg.error;
+      break;
+    }
+    case 'confirm':
+    case 'change':
+      ev.push({ ...msg, answer: null });
+      break;
+    case 'changed':
+      ev.push({ ...msg, undone: false });
+      break;
+    case 'undone': {
+      const c = find('changed', msg.id);
+      if (c) c.undone = true;
+      break;
+    }
+    case 'turn-end':
+    case 'notice':
+    case 'error':
+      ev.push({ ...msg });
+      break;
+    default:
+      break;
+  }
+}
+
+// The player's answer to a card, so a replayed card shows it instead of buttons.
+function recordAnswer(id, answer) {
+  const card = chat.events.findLast((e) => (e.type === 'confirm' || e.type === 'change') && e.id === id);
+  if (card) card.answer = answer;
+}
+
+// Saved half a second after the last change, so a game that closes mid-turn keeps
+// the chat up to that moment.
+let saveTimer = null;
+const post = (msg) => {
+  record(msg);
+  channel.post(msg);
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveChat, 500);
+};
+
+const restore = () => channel.post({ type: 'restore', chat: { id: chat.id, title: chat.title }, events: chat.events });
 
 async function status() {
   let tools = 'ok';
@@ -317,6 +448,14 @@ function summarize(input, name) {
   return s.length > 140 ? `${s.slice(0, 137)}...` : s;
 }
 
+// Claude Code keeps each session in its config folder. A chat whose session is gone
+// (the folder was cleared) starts afresh instead of failing.
+function sessionExists(id) {
+  const projects = join(CONFIG_DIR, 'projects');
+  if (!existsSync(projects)) return false;
+  return readdirSync(projects).some((d) => existsSync(join(projects, d, `${id}.jsonl`)));
+}
+
 async function ask(text) {
   if (running) return;
   const key = await secrets.get(KEY);
@@ -332,6 +471,16 @@ async function ask(text) {
     mcpServers.rednode = { type: 'http', url: m.url, headers: m.headers };
   } catch (err) {
     post({ type: 'notice', text: `Without REDnode's tools: ${err.message}` });
+  }
+
+  if (!chat.title) chat.title = text.replace(/\s+/g, ' ').slice(0, 60);
+  chat.events.push({ type: 'user', text });
+  if (chat.events.length === 1) forgetOldChats();
+  saveChat();
+
+  if (sessionId && !sessionExists(sessionId)) {
+    sessionId = null;
+    post({ type: 'notice', text: "Claude no longer has this chat's earlier turns, so it starts afresh from this question." });
   }
 
   running = new AbortController();
@@ -403,6 +552,9 @@ async function ask(text) {
     console.log(`Turn ended: ${why}`);
   } finally {
     running = null;
+    // A card still waiting when the turn ended was never answered.
+    for (const e of chat.events) if ((e.type === 'confirm' || e.type === 'change') && !e.answer) e.answer = 'Not answered';
+    saveChat();
     status();
   }
 }
@@ -414,6 +566,7 @@ channel.on(async (msg) => {
     switch (msg?.type) {
       case 'hello':
         await status();
+        restore();
         break;
       case 'set-key': {
         const key = String(msg.key ?? '').trim();
@@ -445,19 +598,42 @@ channel.on(async (msg) => {
         break;
       case 'new':
         if (!running) {
+          saveChat();
+          chat = newChat();
           sessionId = null;
           chatCost = 0;
           trustEdits = false;
           notes.length = 0;
+          edits.clear();
           await status();
         }
         break;
       case 'undo':
         undo(Number(msg.id));
+        saveChat();
         break;
       case 'confirm':
-        confirms.get(msg.id)?.(msg.allow === 'all' ? 'all' : !!msg.allow);
-        confirms.delete(msg.id);
+        if (confirms.has(msg.id)) {
+          recordAnswer(msg.id, msg.allow === 'all' ? 'Allowed, with every change in this chat' : msg.allow ? 'Allowed' : 'Denied');
+          confirms.get(msg.id)(msg.allow === 'all' ? 'all' : !!msg.allow);
+          confirms.delete(msg.id);
+        }
+        break;
+      case 'history':
+        channel.post({ type: 'history', current: chat.id, chats: listChats() });
+        break;
+      case 'open-chat':
+        if (!running && String(msg.id) !== chat.id) {
+          saveChat();
+          openChat(msg.id);
+          restore();
+          await status();
+          console.log(`Opened the chat "${chat.title}"`);
+        }
+        break;
+      case 'delete-chat':
+        if (String(msg.id) !== chat.id) rmSync(chatFile(msg.id), { force: true });
+        channel.post({ type: 'history', current: chat.id, chats: listChats() });
         break;
       default:
         break;
@@ -467,5 +643,14 @@ channel.on(async (msg) => {
   }
 });
 
-console.log(`REDagent ready (${MODELS.find((x) => x.id === settings.model)?.name ?? settings.model})`);
+// The latest chat comes back, so a restart of the game does not lose it.
+const latest = listChats()[0];
+if (latest) {
+  try {
+    openChat(latest.id);
+  } catch (err) {
+    console.log(`Could not open the last chat: ${err.message}`);
+  }
+}
+console.log(`REDagent ready (${MODELS.find((x) => x.id === settings.model)?.name ?? settings.model})${chat.events.length ? `, chat "${chat.title}"` : ''}`);
 status();
