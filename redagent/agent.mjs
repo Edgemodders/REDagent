@@ -385,7 +385,15 @@ function describe(name, input) {
     const where = input.class ? `${input.class}.` : input.self !== undefined ? `object ${input.self} ` : '';
     return `call the game: ${where}${input.fn}(${JSON.stringify(input.args ?? []).slice(1, -1)})`;
   }
-  if (t === 'apps') return `${input.action} the package "${input.id}"`;
+  if (t === 'apps') {
+    const what = {
+      'pin-launcher': (id) => `pin the package "${id}" to the launcher`,
+      'unpin-launcher': (id) => `unpin the package "${id}" from the launcher`,
+      'pin-hud': (id) => `pin the package "${id}" to the HUD (shown during gameplay)`,
+      'unpin-hud': (id) => `unpin the package "${id}" from the HUD (shown only while you interact)`,
+    }[input.action];
+    return what ? what(input.id) : `${input.action} the package "${input.id}"`;
+  }
   return `${t} ${JSON.stringify(input)}`;
 }
 
