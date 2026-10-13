@@ -11,7 +11,7 @@ REDagent is an in-game assistant for REDnode mods, powered by Claude. Read [docs
 ## Docs site
 
 - `docs/` is published by GitHub Pages at https://edgemodders.github.io/REDagent/ through `.github/workflows/pages.yml` (Settings > Pages > Source: GitHub Actions). Jekyll renders it with the HUD layout copied from REDbridge.
-- `docs/index.md` is the player's guide: what REDagent does, install, first run, changes and undo, key and data, cost, troubleshooting. Keep it current with each phase, in plain words for players. `docs/design.md` is for developers.
+- `docs/index.md` is the landing page, laid out like the other tools' docs sites (REDdeck, REDnode): the document ledger at the top, then the roadmap status table per phase. Bump its date and the phase rows with each phase. `docs/guide.md` is the player's guide: what REDagent does, install, first run, changes and undo, key and data, cost, troubleshooting. Keep it current with each phase, in plain words for players. `docs/design.md` is for developers.
 - Add every new page to `nav` in `docs/_config.yml`. The banner, icon and badges come from `tools/brand/` (`render.ps1`); update the status badge in `badges.py` when the phase changes.
 
 ## Conventions

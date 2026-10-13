@@ -20,8 +20,10 @@ defaults:
 
 # Status bar links, in order.
 nav:
-  - title: Guide
+  - title: Docs
     url: /
+  - title: Guide
+    url: /guide.html
   - title: Design
     url: /design.html
   - title: REDnode

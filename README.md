@@ -14,7 +14,7 @@ An assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode]
 
 You ask, in a chat window in the game: "make me a mod that warns me when my health drops below 30%". REDagent writes the mod, REDnode's hot reload runs it, REDagent reads the mod's log and checks the game's answers through REDnode's game API, and fixes what is wrong. Every change to a file is shown to you first as a diff, and can be undone.
 
-**[Read the guide](https://edgemodders.github.io/REDagent/)** &middot; [Design](docs/design.md) &middot; [REDnode](https://github.com/Edgemodders/REDnode) &middot; [REDcode](https://github.com/Edgemodders/REDcode)
+**[Read the guide](https://edgemodders.github.io/REDagent/guide.html)** &middot; [Docs](https://edgemodders.github.io/REDagent/) &middot; [Design](docs/design.md) &middot; [REDnode](https://github.com/Edgemodders/REDnode) &middot; [REDcode](https://github.com/Edgemodders/REDcode)
 
 > [!NOTE]
 > **Status: phase C4, chat history and seeing the game's screen, passed in game.** C1, the REDnode kernel's MCP server, and C2, the chat in the game, passed in game. Phases and results are in [docs/design.md](docs/design.md).
