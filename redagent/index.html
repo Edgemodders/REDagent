@@ -19,7 +19,10 @@
 
   /* Chat */
   .chat { display: flex; flex-direction: column; gap: 10px; height: 100%; min-height: 0; }
-  #log { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+  /* The chat only scrolls up and down: everything in it wraps to the window's width. */
+  #log { flex: 1; min-height: 0; overflow-x: hidden; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+  #log > * { min-width: 0; max-width: 100%; }
+  .msg code, .tool, .tool .args, .changed code { overflow-wrap: anywhere; }
   /* Every change in this chat, with Undo, above the input: it never scrolls away */
   .changes { border-top: 1px solid var(--rn-line); padding-top: 6px; font: 12px var(--rn-mono); color: var(--rn-dim); }
   .changes-bar { display: flex; align-items: center; gap: 8px; }
