@@ -6,7 +6,7 @@ REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fix
 
 REDagent reads what is already installed, writes the mod, and shows you every change before it is made. REDnode loads the mod a moment later. REDagent then reads the mod's log, checks its window and the game's answers, and fixes what is wrong.
 
-> **Status:** an early developer build. The chat (phase C2) and writing mods (phase C3) passed their in-game tests. Chat history and seeing the game's screen (phase C4) are built and waiting for theirs. There is no packaged release yet.
+> **Status:** an early developer build. The chat (phase C2) and writing mods (phase C3) passed their in-game tests. So did chat history and seeing the game's screen (phase C4). There is no packaged release yet.
 
 ## What it can do
 

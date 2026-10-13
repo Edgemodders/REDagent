@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://edgemodders.github.io/REDagent/"><img src="docs/assets/brand/badges/docs.svg" alt="docs: read the docs"></a>
-  <img src="docs/assets/brand/badges/status.svg" alt="status: C4 testing">
+  <img src="docs/assets/brand/badges/status.svg" alt="status: C4 passed">
   <a href="https://github.com/Edgemodders/REDnode"><img src="docs/assets/brand/badges/rednode.svg" alt="runs in: REDnode"></a>
   <img src="docs/assets/brand/badges/claude.svg" alt="powered by: Claude">
   <a href="LICENSE"><img src="docs/assets/brand/badges/license.svg" alt="license: MIT"></a>
@@ -17,7 +17,7 @@ You ask, in a chat window in the game: "make me a mod that warns me when my heal
 **[Read the guide](https://edgemodders.github.io/REDagent/)** &middot; [Design](docs/design.md) &middot; [REDnode](https://github.com/Edgemodders/REDnode) &middot; [REDcode](https://github.com/Edgemodders/REDcode)
 
 > [!NOTE]
-> **Status: phase C3, writing mods, passed in game; C4, chat history and seeing the game's screen, is built and waiting for its in-game test.** C1, the REDnode kernel's MCP server, and C2, the chat in the game, passed in game. Phases and results are in [docs/design.md](docs/design.md).
+> **Status: phase C4, chat history and seeing the game's screen, passed in game.** C1, the REDnode kernel's MCP server, and C2, the chat in the game, passed in game. Phases and results are in [docs/design.md](docs/design.md).
 
 ## Install (developers)
 

@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). **C4, polish, is built; its in-game test is pending** (steps below). Then C5 or C6, agreed with the user.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). **C4, polish, passed in game on 2026-10-13** (results below). Next in REDnode: O8 Mod Manager; then C5 or C6, agreed with the user.
 
 ## What it can do
 
@@ -218,6 +218,14 @@ Use the **Test timer** (F10, switch it on in the launcher): press **Start**, the
 7. Quit the game, start it again and load a save. The chat is back; press **Show** in the changes strip and **Undo** the change from step 5. Mark.
 8. Optional, if your display does HDR: turn HDR on in the game's settings and repeat step 3. Colors should look about right. Mark.
 9. Quit the game.
+
+**Result, 2026-10-13: passed.** Plugin 0.13.0, 3840 x 2160, SDR. REDagent described the game's screen from `game_image`, alone and with the overlay, and placed the Hello mod window on it; the plugin logged no capture error. The change card showed WAITING FOR YOU. **Chats**, **New** and **Open** worked, and the opened chat continued its Claude session. After a restart of the game the last chat came back and **Undo** restored `low-health/index.html`. The whole test cost $0.29, with up to 136,000 tokens a turn read from the cache.
+
+| Finding | Notes |
+|---|---|
+| At the first start, no earlier chat came back | Expected: chats from before C4 were never saved. From C4 on they are |
+| HDR not tried | The game ran in SDR. The HDR conversion has unit tests only. **Unverified** in game |
+| The Test timer was used only once | The player forgot it for the later steps; the logs' clock times were enough this time |
 
 ## Phases
 
