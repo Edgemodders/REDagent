@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, except Undo, which is left for the next test (results below). Then C6, REDagent in REDcode, planned with the REDcode session.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). Then C6, REDagent in REDcode, planned with the REDcode session.
 
 ## What it can do
 
@@ -191,6 +191,9 @@ Steps 1 and 2 are the same as the C2 test (deploy both, load a save, the key is 
 | The launcher tab and REDagent were invisible until hovered or switched off and on | In REDnode: with GPU sharing, a repaint request sends no frame when the page has not changed. **Fixed:** a repaint also draws a 1-pixel, almost transparent mark for two frames. Checked in the mock |
 | Closing a mod's window left no way to get it back | In REDnode: the launcher now shows "Window closed" with **Show** under the mod |
 | Request: a stopwatch in the game for timing test steps | Proposed: a small built-in app whose marks are written to the log |
+| Request: thin scrollbars in the theme's colors, and no sideways scrolling in the chat | **Fixed:** REDnode's UI kit styles every scrollbar on a page (6 px; grey, red or yellow by theme); the chat wraps everything to its width |
+
+**Second test, 2026-10-12: passed.** With REDnode plugin 0.12.1: the launcher tab and REDagent showed at start; clicks passed through transparent areas and below rolled-up windows (every one of 51 presses found a transparency map); a closed Hello mod window came back with **Show**; scrollbars were thin and followed the theme; **Undo** from the changes strip restored `low-health/index.html`, and REDagent knew what was undone.
 
 ## Phases
 
