@@ -15,8 +15,9 @@ REDagent reads what is already installed, writes the mod, and shows you every ch
 | You ask | What REDagent does |
 |---|---|
 | "What's in my mod log?" | Reads the REDnode Mod log, including crashes, and explains them |
-| "What are V's health, level and money?" | Looks up the game functions and calls the running game. It asks you first before any call that could change the game |
+| "What are V's health, level and money?" | Looks up the game functions and reads them from the running game. It asks you first before every call that could change the game |
 | "What does the Hello mod window show?" | Captures that overlay window and reads it |
+| "Swap my changed archive into the game" | Swaps it into the running game through REDnode, so a changed mesh or texture shows without a restart. It asks you first |
 | "What's on my screen?" | Takes a picture of the game's screen, with or without REDnode's windows, and describes it |
 | "Why does the crash mod break?" | Reads the mod's files and explains the code |
 | "Make a mod that ..." | Creates a new REDnode package, waits for it to load, checks it runs, and fixes it |
@@ -28,7 +29,7 @@ It sees the game's screen only when it takes a picture, which it does when it ne
 
 | You need | Why |
 |---|---|
-| Cyberpunk 2077 on PC, with [REDnode](https://github.com/Edgemodders/REDnode) installed | REDagent is a REDnode package. REDnode draws its window and gives it the game's tools |
+| Cyberpunk 2077 on PC, with [REDnode](https://github.com/Edgemodders/REDnode) 0.26.16 or later installed | REDagent is a REDnode package. REDnode draws its window and gives it the game's tools |
 | Your own Anthropic API key | REDagent calls Claude with your key, and Anthropic bills you for what you use. Get one at [console.anthropic.com](https://console.anthropic.com/) under API keys. No key ships with REDagent. A Claude.ai subscription cannot be used |
 | About 300 MB of disk | Most of it is the Claude Agent SDK, which REDagent runs on |
 | About 120 MB of memory while the game runs | REDagent runs in its own Node process, outside the game |

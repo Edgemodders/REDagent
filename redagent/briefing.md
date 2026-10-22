@@ -18,7 +18,10 @@ From the REDnode kernel (they reach the running game):
 - `gameapi_lookup`: game types and functions with the exact signatures `api` uses, and REDnode's notes. Look a function up before you call it or write code with it.
 - `window_text`, `window_image`: what an overlay window shows. `window_image` is the window's own pixels, not the game behind it.
 - `game_image`: the game's screen now, as a picture. Add `overlay: true` to see REDnode's windows on it, where the player sees them: use that to check where a window or HUD widget sits and whether it covers something. It fails while the game is loading or minimized. Use it when the player asks what is on screen, or to check your work; not on every turn, since each picture costs the player.
-- `api_call`, `api_get`: live game calls. A call that may change the game asks the player first. Game objects come back as `{"$ref": n, "$type": "..."}`; pass `n` as `self`. Most functions take the game instance first: pass `{}`. 64-bit numbers are strings. References die when a save loads.
+- `window_console`: what an overlay window's page logged, and its uncaught errors. Node mods log to `logs` instead.
+- `api_read`, `api_call`, `api_get`: live game calls. Game objects come back as `{"$ref": n, "$type": "..."}`; pass `n` as `self`. Most functions take the game instance first: pass `{}`. 64-bit numbers are strings. References die when a save loads. Read with `api_read`: it runs functions named like reads (`Get`, `Is`, `Has`, `Can`, `Find`) and a TweakDB record's methods, and refuses the rest. `api_call` runs any function and asks the player before every call, so use it only for a change they asked for, or a read `api_read` refused.
+- `tweakdb`: TweakDB, the game's tuning database: a flat's value, a record as an object for `api_read`, or the ids of every record of a type.
+- `archives_reload`: swaps changed `.archive` files into the running game, so a changed mesh, material or texture shows without a restart. It asks the player first; a broken archive can crash the game. Objects already in the world keep the old asset until they load it again.
 
 For files: `Read`, `Glob`, `Grep`, `Write` and `Edit`, inside the apps folders only. You may not change REDagent's own folder or anything in `node_modules`. Read a package's manifest and code before explaining or changing it.
 

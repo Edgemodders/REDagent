@@ -117,7 +117,11 @@ Game types are looked up on demand with `gameapi_lookup`, not carried in the pro
 | `perf` | The game's frame rate and the overlay's cost | C1 |
 | `gameapi_lookup` | Game types, functions, enum members and REDnode's notes | C1 |
 | `window_text`, `window_image` | An overlay window's text, or its image: the window's own pixels, before the plugin places it on screen | C1 |
-| `api_call` | A live game call. Calls that may change the game ask first | C1 |
+| `window_console` | What an overlay window's page logged | 0.2.0 |
+| `api_read` | A live game call that only reads (REDnode's rule: functions named like reads, and TweakDB records' methods). Never asks | 0.2.0 |
+| `api_call` | A live game call. Asks the player before every call | C1 |
+| `tweakdb` | TweakDB flats, records and ids | 0.2.0 |
+| `archives_reload` | Swaps archives into the running game. Asks the player first | 0.2.0 |
 | Read, search, edit, write files | In the apps folder only, with a diff and confirmation for every write, and undo | C3 |
 
 ## C2: what was built
@@ -261,6 +265,40 @@ Use the **Test timer**: Start, then Mark after each step.
 | Finding | Notes |
 |---|---|
 | The Ask mod window was too short, and long answers ran off its bottom with no scroll bar | In REDnode: the page that draws mod windows set `rn-window` to `display: block`, which broke its flex layout, so the window's body could not scroll. **Fixed:** every mod window now scrolls when its content is taller than the window; the Ask mod window is taller (420 x 520) |
+
+## 0.2.0: catching up with REDnode
+
+Agreed with the user on 2026-10-22, before the first release (GitHub and Nexus). REDagent had not changed since C5 (REDnode 0.14.1), and REDnode had moved on to 0.26.16.
+
+| Change | Why |
+|---|---|
+| `api_read`, `tweakdb` and `window_console` run without asking | REDagent's own check refused every tool it did not know ("REDagent cannot use X in this version"), so REDnode's newer tools were blocked. `api_read` is REDnode 0.26.16's read-only game call |
+| `archives_reload` asks the player with a card naming the archives | It swaps archives into the running game; a broken one can crash it |
+| The briefing tells the model to read through `api_read` and use `api_call` only for changes; mods' questions read through `api_read` too | `api_call` now asks before every call |
+| The briefing's copy of REDnode's overlay apps guide is taken again (`tools/build.mjs`) | The copy was from 2026-10-13: no World API, TweakDB, sound, archives or `ui.list` |
+| The manifest's `requires: { "rednode": ">=0.26.16" }` | REDnode refuses to start REDagent on an older REDnode, and says why |
+| Claude Agent SDK 0.3.296 to 0.3.308 | Current |
+
+**REDnode's ask flag in the Agent SDK** (checked locally on 2026-10-22, SDK 0.3.308): REDnode 0.26.16 gives `api_call` and `archives_reload` `_meta: { "anthropic/requiresUserInteraction": true }`. A run of the SDK with REDagent's options against REDnode's MCP server, a stand-in game and a stand-in API that called `api_read`, `api_call` and `archives_reload` in turn:
+
+| Run | Seen |
+|---|---|
+| REDagent's options | `canUseTool` was asked for all three; the allowed calls reached the game, the denied swap came back to the model as "The player said no." |
+| `api_call` and `archives_reload` also in `allowedTools`, as an "always allow" rule would put them | The SDK warned that `allowedTools` would skip `canUseTool`, but for these two it still asked `canUseTool`: the flag overrides allow rules |
+
+So REDagent's card is always shown for a flagged tool. The check script stays in the dev PC's scratchpad.
+
+### 0.2.0 test
+
+On the laptop or the dev PC, with REDnode 0.26.16 and REDagent 0.2.0. Use the **Test timer**: Start, then Mark after each step.
+
+1. Start the game and load a save. **F10**: in the launcher, REDagent's "REDnode's tools for AI agents" is **Allowed**. In REDagent, the key is set. Mark.
+2. Ask REDagent: "What are V's health and money, and what is V wearing on the legs?" It should answer from the game **without** a card. Mark.
+3. Ask: "Give V 50 eddies." A card asks first; **Allow**. Check the money in Vitals. Mark.
+4. Ask: "Swap `<full path to an archive>` into the game." A card names the archive; **Deny**. REDagent says you said no. Mark.
+5. Ask: "What does TweakDB say about Items.money?" It answers without a card. Mark.
+6. Ask: "Has the Welcome window's page logged any errors?" It answers without a card (`window_console`). Mark.
+7. Quit the game. Send `rednode-mods.log` and the plugin log.
 
 ## Phases
 

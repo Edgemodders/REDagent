@@ -34,9 +34,19 @@ const APPS_DIRS = pkg.appsDirs.map((d) => resolve(d));
 
 // Read-only kernel tools run without asking. The rest ask the player, or are refused.
 const KERNEL = 'mcp__rednode__';
-const READ_ONLY = ['logs', 'game_state', 'perf', 'gameapi_lookup', 'window_text', 'window_image', 'game_image', 'api_get'].map(
-  (t) => KERNEL + t,
-);
+const READ_ONLY = [
+  'logs',
+  'game_state',
+  'perf',
+  'gameapi_lookup',
+  'window_text',
+  'window_image',
+  'window_console',
+  'game_image',
+  'api_read',
+  'api_get',
+  'tweakdb',
+].map((t) => KERNEL + t);
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const WRITE_TOOLS = ['Write', 'Edit'];
 const FILE_TOOLS = [...READ_TOOLS, ...WRITE_TOOLS];
@@ -394,6 +404,10 @@ function describe(name, input) {
     }[input.action];
     return what ? what(input.id) : `${input.action} the package "${input.id}"`;
   }
+  if (t === 'archives_reload') {
+    const files = (input.files ?? []).map((f) => String(f).split(/[\\/]/).pop());
+    return `swap ${files.join(', ')} into the running game (a broken archive can crash the game)`;
+  }
   return `${t} ${JSON.stringify(input)}`;
 }
 
@@ -417,7 +431,7 @@ async function canUseTool(name, input, { signal, toolUseID }) {
   if (WRITE_TOOLS.includes(name)) return confirmChange(name, input, toolUseID, signal);
   const t = name.startsWith(KERNEL) ? name.slice(KERNEL.length) : null;
   if (t === 'apps' && (!input.action || input.action === 'list')) return { behavior: 'allow', updatedInput: input };
-  if (t === 'api_call' || t === 'apps') {
+  if (t === 'api_call' || t === 'apps' || t === 'archives_reload') {
     const ok = await askPlayer(describe(name, input), signal);
     return ok
       ? { behavior: 'allow', updatedInput: input }
@@ -723,7 +737,7 @@ function postMods() {
 function modBriefing(from) {
   return `You are REDagent, powered by Claude, inside Cyberpunk 2077 with REDnode. The REDnode mod "${from.name}" (id ${from.id}) asks you a question for its player, and shows your answer in its own window.
 - Answer the question briefly and directly, in plain text or simple Markdown: a few sentences unless it needs more.
-- You can only read: REDnode's logs, the game state, the game API (look a function up with gameapi_lookup before api_get), overlay windows and the files in the apps folders. You cannot change files or the game, and you cannot ask the player anything.
+- You can only read: REDnode's logs, the game state, the game API (look a function up with gameapi_lookup, then read with api_read or api_get), TweakDB, overlay windows and the files in the apps folders. You cannot change files or the game, and you cannot ask the player anything.
 - Each tool call costs the player. Use tools only when the answer needs live data; context the mod sends comes with the question.
 - If the mod asks for something you cannot do, say so in one sentence.`;
 }

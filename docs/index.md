@@ -5,12 +5,13 @@ REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fix
 | Document | What it covers |
 |---|---|
 | [Guide](guide.html) | What REDagent can do, what you need, install, first run, how changes to your files work, chats, your key and data, cost, troubleshooting |
+| [Changelog](changelog.html) | What changed in each release |
 | [Design](design.html) | How REDagent is built: the Agent SDK, the kernel MCP server, the briefing, the tools, the rules it is locked down by, each phase and its in-game test results |
 | [REDnode docs](https://edgemodders.github.io/REDnode/) | The runtime REDagent writes mods for: its overlay apps guide, game API and MCP server |
 
 ## Roadmap status
 
-As of 2026-10-13. An early developer build; there is no packaged release yet, so it installs from source as the guide describes. Each phase ends with an in-game test.
+As of 2026-10-22. An early developer build; there is no packaged release yet, so it installs from source as the guide describes. Each phase ends with an in-game test.
 
 | Phase | Status |
 |---|---|
@@ -21,6 +22,6 @@ As of 2026-10-13. An early developer build; there is no packaged release yet, so
 | C5 Agent API for mods | Done, passed in game 2026-10-13. Mods ask with `agent.ask` in the `rednode` package once the player allows their `agent` permission; REDagent answers one at a time on Sonnet 5.5 with read-only tools, within a daily limit per mod ($0.25 by default), shown and changed in its Mods view |
 | C6 REDagent in REDcode | Not started. The agent as a core package with two front ends, the in-game chat and a view in REDcode, with edits reviewed in VS Code's diff editor and REDbridge's WolvenKit operations as tools |
 
-O8, REDnode's Mod Manager, passed in game on 2026-10-13. Next after C5's test: C6.
+O8, REDnode's Mod Manager, passed in game on 2026-10-13. Next, agreed on 2026-10-22: the first release on GitHub and Nexus, before C6. Its first step, [0.2.0](design.html#020-catching-up-with-rednode), catches up with REDnode 0.26.16's tools and awaits its in-game test. The release follows on game 2.31, since REDnode waits for RED4ext, redscript and Codeware to support 2.5. See the [changelog](changelog.html).
 
 REDagent is not affiliated with CD Projekt RED or Anthropic. Source code and issues: [github.com/Edgemodders/REDagent](https://github.com/Edgemodders/REDagent)
