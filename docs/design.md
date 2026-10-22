@@ -300,6 +300,18 @@ On the laptop or the dev PC, with REDnode 0.26.16 and REDagent 0.2.0. Use the **
 6. Ask: "Has the Welcome window's page logged any errors?" It answers without a card (`window_console`). Mark.
 7. Quit the game. Send `rednode-mods.log` and the plugin log.
 
+**Result, 2026-10-22: passed** on the laptop (REDnode 0.26.16 as an update over 0.26.15, REDagent 0.2.0 with the Agent SDK installed by `npm ci --omit=dev` on the laptop, game 2.31, 2560 x 1440). The player: everything worked as expected. The Test timer marked steps 1 to 6 between 10:31 and 10:38; the plugin log has no errors.
+
+| Step | Turn cost (Opus 5.5) |
+|---|---|
+| 2, reads without a card | $0.45, the chat's first turn: 650,402 tokens read from the cache over its tool calls |
+| 3, 50 eddies after a card | $0.06 |
+| 4, swap denied at the card | $0.03 |
+| 5, TweakDB | $0.11 |
+| 6, the Welcome window's console | $0.07 and $0.03 (two turns) |
+
+Found: installing the SDK with npm on the player's PC worked, the route proposed for the release. A first question that reads the game costs about $0.45 on Opus, mostly cache reads of the briefing across tool calls; worth showing players, and worth a look at the briefing's size before the release (unverified how much Sonnet saves here).
+
 ## Phases
 
 Each phase ends with an in-game test, as in REDnode.
