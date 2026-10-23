@@ -10,7 +10,7 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
-The first release. REDagent is an assistant inside Cyberpunk 2077, powered by Claude, that writes, runs, checks and fixes REDnode mods with you while you play. It uses your own Anthropic API key.
+The first release, for game version 2.31. REDagent is an assistant inside Cyberpunk 2077, powered by Claude, that writes, runs, checks and fixes REDnode mods with you while you play. It uses your own Anthropic API key.
 
 **New**
 
@@ -21,5 +21,6 @@ The first release. REDagent is an assistant inside Cyberpunk 2077, powered by Cl
 - Swaps changed archives into the running game, after asking you.
 - Chats are kept across game starts, with their Undo.
 - Other mods can ask REDagent questions (`agent.ask`), once you allow them, within a daily spending limit per mod.
-- Asks you before every call that could change your game, and before every archive swap.
-- Needs REDnode 0.26.16 or later.
+- Asks you before every call that could change your game, and before every archive swap. Reads of quest facts and the journal (REDnode's `game_facts` and `game_journal`) do not ask.
+- Gets Anthropic's Claude Agent SDK, which it runs on, at first start: press **Get the Agent SDK** in its window. It downloads about 140 MB from Anthropic's own packages on npm into REDagent's data folder, checked against npm's integrity hashes, so the download of REDagent itself stays small.
+- For game version 2.31 only, like REDnode. Needs REDnode 0.32.1 or later.

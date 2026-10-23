@@ -1,0 +1,88 @@
+# Builds the REDagent player zip: the package laid out like the game folder, with no
+# node_modules (tools/release-zip.mjs). The Claude Agent SDK is not in it: REDagent fetches
+# it on the player's PC at first start. The same zip goes to Nexus Mods (uploaded by hand)
+# and to the GitHub release.
+#
+#   Run workflow (Actions tab)                  builds the zip and keeps it as the run's artifact
+#   Run workflow, "Make a release" ticked       also tags the commit v<version> and makes the
+#                                               GitHub release with the zip; stops first if that
+#                                               tag exists (raise the version in redagent/package.json
+#                                               and redagent/rednode-app.json) or docs/changelog.md
+#                                               has no section for it (tools/notes.mjs)
+#
+# The briefing is copied from REDnode's guide at the tag of the REDnode it needs (the
+# "rednode" input, v0.32.1 by default).
+#
+# Release gate: make a release only after every in-game test of the builds since the last
+# release has passed (docs/design.md). Untested or failed means no release.
+name: Release zip
+
+on:
+  workflow_dispatch:
+    inputs:
+      release:
+        description: Make a release (tags this commit v<version>). Only after every in-game test has passed
+        type: boolean
+        default: false
+      rednode:
+        description: REDnode tag to copy the briefing from
+        type: string
+        default: v0.32.1
+
+permissions:
+  contents: write
+
+jobs:
+  zip:
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/checkout@v4
+        with:
+          repository: Edgemodders/REDnode
+          ref: ${{ inputs.rednode }}
+          path: rednode-src
+          sparse-checkout: docs/overlay-apps.md
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: The version is not released yet
+        if: inputs.release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content redagent/package.json -Raw | ConvertFrom-Json).version
+          gh api "repos/${{ github.repository }}/git/ref/tags/v$version" --silent 2>$null
+          if ($LASTEXITCODE -eq 0) {
+            Write-Output "::error::v$version is already released. Raise the version in redagent/package.json and redagent/rednode-app.json."
+            exit 1
+          }
+          $global:LASTEXITCODE = 0
+
+      - name: Release notes from docs/changelog.md
+        if: inputs.release
+        run: node tools/notes.mjs --out "$env:RUNNER_TEMP/notes.md"
+
+      - name: Build the zip
+        run: node tools/release-zip.mjs rednode-src
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: REDagent-zip
+          path: release/REDagent-*.zip
+          if-no-files-found: error
+
+      - name: GitHub release
+        if: inputs.release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $version = (Get-Content redagent/package.json -Raw | ConvertFrom-Json).version
+          gh release create "v$version" "release/REDagent-$version.zip" --target $env:GITHUB_SHA --title "REDagent $version" --notes-file "$env:RUNNER_TEMP/notes.md"

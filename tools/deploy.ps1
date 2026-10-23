@@ -4,9 +4,10 @@
 
 .DESCRIPTION
   Prepares the briefing (tools/build.mjs), then mirrors redagent/ into
-  <game>\red4ext\plugins\REDnode\apps\redagent, including node_modules with the
-  Claude Agent SDK (about 280 MB). Deploy REDnode first, with its own
-  tools\deploy-native.ps1. Close the game first.
+  <game>\red4ext\plugins\REDnode\apps\redagent. With node_modules from npm install,
+  REDagent uses the Claude Agent SDK there; without it, the window offers Get the Agent
+  SDK, as for players. Deploy REDnode first, with its own tools\deploy-native.ps1.
+  Close the game first.
 
 .EXAMPLE
   .\tools\deploy.ps1 -GameDir 'E:\SteamLibrary\steamapps\common\Cyberpunk 2077'
@@ -21,7 +22,6 @@ $package = Join-Path $repo 'redagent'
 $apps = Join-Path $GameDir 'red4ext\plugins\REDnode\apps'
 
 if (-not (Test-Path $apps)) { throw "REDnode's apps folder is not at $apps. Deploy REDnode first." }
-if (-not (Test-Path (Join-Path $package 'node_modules'))) { throw 'Run npm install in redagent first.' }
 
 & node (Join-Path $PSScriptRoot 'build.mjs')
 if ($LASTEXITCODE) { throw 'Preparing the briefing failed.' }

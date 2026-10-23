@@ -15,6 +15,7 @@
   .setup { display: flex; flex-direction: column; gap: 12px; font-size: 15px; line-height: 1.45; }
   .setup p { margin: 0; }
   .setup .fine { color: var(--rn-dim); font-size: 13px; }
+  .setup .fine.error { color: var(--rn-danger, #ff5a5a); }
   .row { display: flex; align-items: center; gap: 8px; }
 
   /* Chat */
@@ -99,6 +100,13 @@
 <body>
   <rn-window title="REDagent" draggable>
     <span class="status" slot="status">POWERED BY CLAUDE</span>
+
+    <div class="setup" id="sdk-setup" hidden>
+      <p>REDagent runs on Anthropic's <b>Claude Agent SDK</b>. It is not in REDagent's download, so get it once, here: about 140 MB from Anthropic's own packages on npm.</p>
+      <p class="fine">It goes into REDagent's data folder on this PC, after a check against npm's integrity hashes. Its use is subject to Anthropic's terms: code.claude.com/docs/en/legal-and-compliance</p>
+      <div class="row"><rn-button id="sdk-get">Get the Agent SDK</rn-button></div>
+      <p class="fine" id="sdk-progress"></p>
+    </div>
 
     <div class="setup" id="setup" hidden>
       <p>REDagent answers questions about your REDnode mods and the game while you play. It uses Claude with <b>your own Anthropic API key</b>, and you pay Anthropic for what you use.</p>

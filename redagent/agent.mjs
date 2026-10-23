@@ -14,14 +14,49 @@ import { agent, channel, kernel, pkg, secrets } from 'rednode';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { diffLines } from './diff.mjs';
-import { createRequire } from 'node:module';
 import { pathToFileURL } from 'node:url';
+import { findSdk, installSdk, SDK_VERSION } from './sdk.mjs';
 
-const require = createRequire(join(pkg.dir, 'package.json'));
-const { query } = await import(
-  pathToFileURL(join(pkg.dir, 'node_modules', '@anthropic-ai', 'claude-agent-sdk', 'sdk.mjs')).href
-);
-const CLAUDE_EXE = join(dirname(require.resolve('@anthropic-ai/claude-agent-sdk-win32-x64/package.json')), 'claude.exe');
+// The Claude Agent SDK is fetched on the player's PC at first start (sdk.mjs): until then
+// the window shows Get the Agent SDK, and questions are refused with a message.
+let query = null;
+let CLAUDE_EXE = null;
+let sdkJob = null; // the download under way
+
+async function loadSdk() {
+  const found = findSdk(pkg.dir, pkg.dataDir);
+  if (!found) return false;
+  ({ query } = await import(pathToFileURL(found.sdk).href));
+  CLAUDE_EXE = found.exe;
+  console.log(`Claude Agent SDK ${SDK_VERSION} from ${found.from === 'download' ? "REDagent's data folder" : 'node_modules'}`);
+  return true;
+}
+
+try {
+  if (!(await loadSdk())) console.log('The Claude Agent SDK is not here yet: the window offers to get it');
+} catch (err) {
+  console.log(`The Claude Agent SDK could not load: ${err.message}`);
+}
+
+function getSdk() {
+  if (sdkJob || query) return;
+  console.log(`Getting the Claude Agent SDK ${SDK_VERSION} from npm`);
+  const t0 = Date.now();
+  sdkJob = installSdk(pkg.dir, pkg.dataDir, { onProgress: (p) => channel.post({ type: 'sdk-progress', ...p }) })
+    .then(async () => {
+      await loadSdk();
+      console.log(`Claude Agent SDK installed in ${((Date.now() - t0) / 1000).toFixed(1)} s`);
+    })
+    .catch((err) => {
+      console.log(`Getting the Claude Agent SDK failed: ${err.message}`);
+      channel.post({ type: 'sdk-error', text: err.message });
+    })
+    .finally(() => {
+      sdkJob = null;
+      status();
+    });
+  status();
+}
 
 const KEY = 'anthropic-api-key';
 const MODELS = [
@@ -46,6 +81,8 @@ const READ_ONLY = [
   'api_read',
   'api_get',
   'tweakdb',
+  'game_facts',
+  'game_journal',
 ].map((t) => KERNEL + t);
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const WRITE_TOOLS = ['Write', 'Edit'];
@@ -218,6 +255,7 @@ async function status() {
   }
   post({
     type: 'status',
+    sdk: query ? 'ready' : sdkJob ? 'getting' : 'missing',
     hasKey: !!(await secrets.get(KEY)),
     model: settings.model,
     models: MODELS,
@@ -485,6 +523,10 @@ function sessionExists(id) {
 
 async function ask(text) {
   if (running) return;
+  if (!query) {
+    post({ type: 'error', text: 'Get the Claude Agent SDK first.' });
+    return;
+  }
   const key = await secrets.get(KEY);
   if (!key) {
     post({ type: 'error', text: 'Add your Anthropic API key first.' });
@@ -607,6 +649,9 @@ channel.on(async (msg) => {
         await status();
         break;
       }
+      case 'sdk-get':
+        getSdk();
+        break;
       case 'clear-key':
         await secrets.delete(KEY);
         await status();
@@ -745,6 +790,7 @@ function modBriefing(from) {
 let modQueue = Promise.resolve();
 
 async function answerMod(req, st) {
+  if (!query) throw new Error('REDagent does not have the Claude Agent SDK yet. The player gets it in the REDagent window.');
   const key = await secrets.get(KEY);
   if (!key) throw new Error('REDagent has no API key yet. The player adds it in the REDagent window.');
   approveKey(key);

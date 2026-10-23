@@ -116,9 +116,14 @@ function setWorking(on) {
 // ---------- views ----------
 
 function show() {
-  const needKey = !state.hasKey || editingKey;
+  // First the Agent SDK, then the key, then the chat.
+  const needSdk = !!state.sdk && state.sdk !== 'ready';
+  const needKey = !needSdk && (!state.hasKey || editingKey);
+  $('sdk-setup').hidden = !needSdk;
   $('setup').hidden = !needKey;
-  $('chat').hidden = needKey;
+  $('chat').hidden = needSdk || needKey;
+  $('sdk-get').toggleAttribute('disabled', state.sdk === 'getting');
+  $('sdk-get').textContent = state.sdk === 'getting' ? 'Getting...' : 'Get the Agent SDK';
   $('cancel-key').hidden = !state.hasKey;
   $('send').hidden = state.busy;
   $('stop').hidden = !state.busy;
@@ -338,6 +343,12 @@ $('cancel-key').addEventListener('click', () => {
   editingKey = false;
   show();
 });
+$('sdk-get').addEventListener('click', () => {
+  if (state.sdk === 'getting') return;
+  $('sdk-progress').textContent = 'Starting...';
+  $('sdk-progress').classList.remove('error');
+  channel.post({ type: 'sdk-get' });
+});
 $('save-key').addEventListener('click', () => {
   const field = $('key');
   const key = (field.value ?? '').trim();
@@ -364,6 +375,18 @@ function handle(m) {
       // Sent after every answer too: shown only while the panel is open, or when asked for.
       if (panelTab === 'mods' && (opening || !$('history').hidden)) showMods(m);
       opening = false;
+      break;
+    case 'sdk-progress': {
+      const mb = (n) => (n / 1e6).toFixed(0);
+      const done = m.total && m.received >= m.total;
+      $('sdk-progress').textContent = done
+        ? `Part ${m.part} of ${m.of}: unpacking...`
+        : `Part ${m.part} of ${m.of}: ${mb(m.received)}${m.total ? ` of ${mb(m.total)}` : ''} MB`;
+      break;
+    }
+    case 'sdk-error':
+      $('sdk-progress').textContent = `Could not get it: ${m.text}. Check your connection and try again.`;
+      $('sdk-progress').classList.add('error');
       break;
     case 'status':
       state = m;

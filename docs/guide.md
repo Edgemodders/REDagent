@@ -29,22 +29,25 @@ It sees the game's screen only when it takes a picture, which it does when it ne
 
 | You need | Why |
 |---|---|
-| Cyberpunk 2077 on PC, with [REDnode](https://github.com/Edgemodders/REDnode) 0.26.16 or later installed | REDagent is a REDnode package. REDnode draws its window and gives it the game's tools |
+| Cyberpunk 2077 on PC, **game version 2.31**, with [REDnode](https://github.com/Edgemodders/REDnode/releases) 0.32.1 or later installed | REDagent is a REDnode package. REDnode draws its window and gives it the game's tools. Game version 2.5 is not supported yet: REDnode and REDagent move to it once RED4ext, redscript and Codeware support it |
 | Your own Anthropic API key | REDagent calls Claude with your key, and Anthropic bills you for what you use. Get one at [console.anthropic.com](https://console.anthropic.com/) under API keys. No key ships with REDagent. A Claude.ai subscription cannot be used |
-| About 300 MB of disk | Most of it is the Claude Agent SDK, which REDagent runs on |
+| About 300 MB of disk, and a 140 MB download at first start | REDagent runs on Anthropic's Claude Agent SDK. It is not in REDagent's zip: REDagent downloads it once, when you press **Get the Agent SDK** |
 | About 120 MB of memory while the game runs | REDagent runs in its own Node process, outside the game |
 
 ## Install
 
-There is no packaged release yet. To install from source:
+1. Install [REDnode](https://github.com/Edgemodders/REDnode/releases) 0.32.1 or later, with its own requirements (RED4ext and redscript).
+2. Download `REDagent-<version>.zip` from [REDagent's releases](https://github.com/Edgemodders/REDagent/releases). Extract it into your Cyberpunk 2077 folder, or add it to Vortex or EDGEdeck. It puts REDagent in `red4ext\plugins\REDnode\apps\redagent`.
 
-1. Install REDnode and deploy it to the game, following its [developer setup](https://edgemodders.github.io/REDnode/dev-setup.html).
-2. Clone [REDagent](https://github.com/Edgemodders/REDagent) beside REDnode, then run `npm install` in its `redagent` folder.
-3. Close the game. Run `.\tools\deploy.ps1 -GameDir '<your Cyberpunk 2077 folder>'`.
+To install from source instead, for working on REDagent itself: deploy REDnode following its [developer setup](https://edgemodders.github.io/REDnode/dev-setup.html), clone REDagent beside REDnode, close the game and run `.\tools\deploy.ps1 -GameDir '<your Cyberpunk 2077 folder>'`. With `npm install` run in the `redagent` folder first, REDagent uses the Agent SDK from there and skips the download.
+
+## The Claude Agent SDK
+
+REDagent runs on Anthropic's Claude Agent SDK. The SDK is Anthropic's, not open source, so REDagent does not ship it. At first start the REDagent window shows **Get the Agent SDK**. Pressing it downloads Anthropic's own packages from npm, a pinned version of about 140 MB, and checks each against npm's integrity hash before unpacking it into `%APPDATA%\@rednode\overlay\packages\redagent\sdk`. A download that fails or does not match is thrown away, and you can press the button again. Its use is subject to [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance).
 
 ## First run
 
-1. Start the game. The REDagent window opens on the right and asks for your key.
+1. Start the game. The REDagent window opens on the right. Press **Get the Agent SDK** and wait for it to finish. Then it asks for your key.
 2. Press **F10** to open the REDnode launcher. Find REDagent and switch **Allowed** on for "REDnode's tools for AI agents". Without this, REDagent can still chat and read your mods' files, but it cannot see the Mod log, the game or overlay windows.
 3. Copy your API key. Click the key field in REDagent, press **Ctrl+V**, then **Save key**. The chat appears.
 4. Ask something short, like "What's in my mod log?"

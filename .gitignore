@@ -1,4 +1,6 @@
 node_modules/
+# tools/release-zip.mjs
+release/
 # claude.exe's own files, if it is ever run inside the repo
 .claude-config/
 # copied from REDnode by tools/build.mjs
