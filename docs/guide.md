@@ -113,6 +113,7 @@ In our first test, six questions (five on Opus 5.5, one on Sonnet 5.5) cost $0.3
 | You see | Do this |
 |---|---|
 | "REDnode's tools are off" | In the launcher (F10), switch **Allowed** on for REDagent |
+| **Get the Agent SDK** fails | Check your connection and press it again. A partial or mismatched download is thrown away, never used |
 | "That does not look like an Anthropic API key" | Copy the whole key. Anthropic keys start with `sk-ant-` |
 | An error about your key or credit | Check the key and your credit at console.anthropic.com, then press **Key** and save the key again |
 | REDagent asks for your key again | The saved key could not be read, for example after a Windows account change. Paste it again |

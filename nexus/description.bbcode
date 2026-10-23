@@ -1,0 +1,117 @@
+[center][img]https://raw.githubusercontent.com/Edgemodders/REDagent/main/docs/assets/brand/banner.png[/img][/center]
+
+[center][size=5][b][color=#fcee0a]An assistant inside Night City that writes, runs, checks and fixes your mods with you while you play.[/color][/b][/size][/center]
+
+[center][size=3]REDagent is a chat window over Cyberpunk 2077, powered by Claude. Ask it about your mods, their logs and the game; ask it to make a mod, and it writes it, watches it load, reads its log and fixes what is wrong. It runs on [url=https://www.nexusmods.com/cyberpunk2077/mods/REDNODE_PAGE]REDnode[/url] and uses your own Anthropic API key.[/size][/center]
+
+[center][size=3]What changed in each version: [url=https://edgemodders.github.io/REDagent/changelog.html]changelog[/url] · Guide: [url=https://edgemodders.github.io/REDagent/guide.html]REDagent guide[/url][/size][/center]
+
+[line]
+
+[quote][size=4][b][color=#fcee0a]STATUS: PREVIEW[/color][/b][/size]
+Built in the open and tested in the game after every phase, on [b]game version 2.31[/b]. Game version 2.5 is not supported yet: REDnode and REDagent move to it once RED4ext, redscript and Codeware support it.
+[b]You pay Anthropic for what you use[/b], with your own API key. A Claude.ai subscription cannot be used.[/quote]
+[line]
+
+[color=#19f3ff][i]Screenshot 1: REDagent's window over the game, answering a question with a tool call shown[/i][/color]
+
+[size=5][b][color=#fcee0a]What you can ask[/color][/b][/size]
+
+[list]
+[*][b]"What's in my mod log?"[/b] It reads REDnode's Mod log, crashes included, and explains them.[/*]
+[*][b]"What are V's health, level and money?"[/b] It looks the game functions up and reads them from the running game.[/*]
+[*][b]"What does this mod's window show?"[/b] It captures the overlay window and reads it.[/*]
+[*][b]"What's on my screen?"[/b] It takes a picture of the game when it needs to see, with or without REDnode's windows.[/*]
+[*][b]"Make a mod that warns me when V's health drops below 30%."[/b] It writes a new REDnode mod, waits for it to load, checks it runs and fixes it.[/*]
+[*][b]"Swap my changed archive into the game."[/b] It swaps it into the running game through REDnode, so a changed mesh or texture shows without a restart.[/*]
+[/list]
+It cannot press keys or move the mouse in the game, run commands or install packages.
+
+[color=#19f3ff][i]Screenshot 2: a change card with its diff, Allow and Deny[/i][/color]
+
+[size=5][b][color=#fcee0a]You stay in control[/color][/b][/size]
+
+[list]
+[*][b]Every file change is shown first[/b] as a diff, added lines in green and removed in red: [b]Allow[/b], [b]Allow all in this chat[/b] or [b]Deny[/b].[/*]
+[*][b]Every change has Undo.[/b] REDagent backs up each file before it changes it.[/*]
+[*][b]It writes only in REDnode's apps folders[/b], never its own files, never a node_modules folder, nowhere else on your PC.[/*]
+[*][b]It asks you before every call that could change your game[/b] (money, health, quest facts, moving V) and before every archive swap. Reads never ask.[/*]
+[*][b]Each answer shows its cost[/b], with the chat's running total.[/*]
+[/list]
+[size=5][b][color=#fcee0a]Mods can ask it too[/color][/b][/size]
+
+Other mods can ask REDagent questions and show you the answers, for example a mod that explains an error. Only once you allow it, only to read (never to change your files or game), on Sonnet 5.5, within a daily spending limit per mod ($0.25 unless you change it), and with pictures off unless you switch them on for that mod.
+
+[size=5][b][color=#fcee0a]Requirements[/color][/b][/size]
+
+[list]
+[*][url=https://www.nexusmods.com/cyberpunk2077/mods/REDNODE_PAGE]REDnode[/url] 0.32.1 or later, with what it needs (RED4ext, redscript).[/*]
+[*]Your own [b]Anthropic API key[/b]: [url=https://console.anthropic.com/]console.anthropic.com[/url], under API keys. Anthropic bills you for what you use.[/*]
+[*]Anthropic's [b]Claude Agent SDK[/b], which REDagent runs on: REDagent downloads it at first start (below).[/*]
+[*]Cyberpunk 2077 on PC, Windows 10 or 11, 64-bit, [b]game version 2.31[/b].[/*]
+[*]About 300 MB of disk, and about 120 MB of memory while the game runs.[/*]
+[/list]
+[size=5][b][color=#fcee0a]Install[/color][/b][/size]
+
+[list]
+[*][b]Vortex:[/b] Mod Manager Download, then enable and deploy. Install REDnode first.[/*]
+[*][b]By hand:[/b] extract the zip into the game folder, so REDagent lands in [i]red4ext/plugins/REDnode/apps/redagent/[/i].[/*]
+[/list]
+[size=5][b][color=#fcee0a]First run[/color][/b][/size]
+
+[list=1]
+[*]Start the game. The REDagent window opens on the right. Press [b]Get the Agent SDK[/b] and wait for it to finish.[/*]
+[*]Press [b]F10[/b] to open the REDnode launcher. Find REDagent and switch [b]Allowed[/b] on for "REDnode's tools for AI agents", so it can see the game and your mods' logs.[/*]
+[*]Paste your API key into REDagent and press [b]Save key[/b]. The chat appears.[/*]
+[*]Ask something short, like "What's in my mod log?"[/*]
+[/list]
+[color=#19f3ff][i]Screenshot 3: the Get the Agent SDK panel at first start[/i][/color]
+
+[size=5][b][color=#fcee0a]The Claude Agent SDK[/color][/b][/size]
+
+REDagent runs on Anthropic's Claude Agent SDK. The SDK is Anthropic's and not open source, so it is not in this download. [b]Get the Agent SDK[/b] fetches Anthropic's own packages from npm (a pinned version, about 140 MB), checks each against npm's integrity hash, and unpacks them into REDagent's data folder on your PC. A download that fails or does not match is thrown away. Its use is subject to [url=https://code.claude.com/docs/en/legal-and-compliance]Anthropic's terms[/url].
+
+[size=5][b][color=#fcee0a]Your key and your data[/color][/b][/size]
+
+[list]
+[*][b]Your API key[/b] is stored encrypted with your Windows account, by REDnode, used only to talk to Anthropic, and never shown again.[/*]
+[*][b]Your questions, REDagent's answers and what it reads to answer[/b] (mod logs, game values, pictures it takes, the files it reads) are sent to Anthropic's API, as with any Claude API use.[/*]
+[*][b]Everything else stays on your PC.[/b] REDagent sends no telemetry.[/*]
+[/list]
+[size=5][b][color=#fcee0a]What it costs[/color][/b][/size]
+
+You pay Anthropic per use, and each answer shows what it cost. [b]Opus 5.5[/b] (the default) is for writing and fixing mods; [b]Sonnet 5.5[/b] is for quick questions at a lower price. In our first test, six questions cost $0.34 in all. A long chat costs more per question, since the whole chat is sent each time: start a [b]New[/b] chat when you change topic.
+
+[size=5][b][color=#fcee0a]Questions[/color][/b][/size]
+
+[b]Can I use my Claude.ai subscription?[/b]
+No. Anthropic does not allow claude.ai logins in third-party products, so REDagent uses an API key, billed per use.
+
+[b]It says REDnode's tools are off.[/b]
+Press F10 and, in the launcher, switch [b]Allowed[/b] on for REDagent.
+
+[b]Get the Agent SDK failed.[/b]
+Check your connection and press it again. A partial download is thrown away, never used.
+
+[b]Is it free?[/b]
+REDagent is free and open source under the MIT license. Claude is not: you pay Anthropic for what you use.
+
+[line]
+
+[size=5][b][color=#fcee0a]Links[/color][/b][/size]
+
+[list]
+[*]Guide: [url=https://edgemodders.github.io/REDagent/guide.html]edgemodders.github.io/REDagent[/url][/*]
+[*]Source and issues: [url=https://github.com/Edgemodders/REDagent]github.com/Edgemodders/REDagent[/url][/*]
+[*]REDnode: [url=https://www.nexusmods.com/cyberpunk2077/mods/REDNODE_PAGE]Nexus page[/url], [url=https://edgemodders.github.io/REDnode/]docs[/url][/*]
+[*]EDGEmodders: [url=https://edgemodders.ai/]edgemodders.ai[/url][/*]
+[*]Community Discord: [url=https://discord.gg/63qP3Erw43]discord.gg/63qP3Erw43[/url][/*]
+[/list]
+[size=5][b][color=#fcee0a]Credits[/color][/b][/size]
+
+[list]
+[*][b][url=https://www.nexusmods.com/profile/Cyberbuilds]Cyberbuilds[/url][/b] for making Edgemodders and these tools.[/*]
+[*][b]Anthropic[/b] for Claude and the Claude Agent SDK, which REDagent runs on.[/*]
+[*]The Cyberpunk 2077 modding community: RED4ext, redscript, Codeware, WolvenKit and the research REDnode builds on.[/*]
+[/list]
+[size=2]REDagent is not affiliated with or endorsed by CD PROJEKT RED or Anthropic. Cyberpunk 2077 is a trademark of CD PROJEKT. Claude is a trademark of Anthropic.[/size]
