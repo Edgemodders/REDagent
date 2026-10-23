@@ -341,6 +341,18 @@ Before: close the game. Delete `red4ext\plugins\REDnode\apps\redagent` in the ga
 6. Quit to the desktop and start the game again. REDagent opens on the chat, with no download and no key asked for. Mark.
 7. Quit the game. Send `rednode-mods.log`.
 
+**Result, 2026-10-23: passed** on the laptop (REDnode 0.32.1 from its GitHub release, REDagent 0.3.0, game 2.31). The player: everything worked.
+
+| Step | Seen in the log |
+|---|---|
+| First try | No download offered: the game folder still had 0.2.0's `node_modules`, and the log said "Claude Agent SDK 0.3.308 from node_modules". With the folder deleted and the zip extracted again, the run below |
+| 1 Get the Agent SDK | "The Claude Agent SDK is not here yet", then the download: installed in 55.5 s on the laptop, loaded from REDagent's data folder |
+| 4 Reads | Answered from the game with no card; the chat's first turn cost $0.26 on Opus 5.5 |
+| 5 A mod | `money-window` written after its card and started; Undo removed it ($0.13) |
+| 6 A new start | "Claude Agent SDK 0.3.308 from REDagent's data folder", the chat back, no key asked for |
+
+Found: a leftover `node_modules` from a source install hides the download, by design (a developer's copy wins). Players coming from a source install should delete the folder first; the guide says what the window shows.
+
 Each phase ends with an in-game test, as in REDnode.
 
 | Phase | Builds | The test proves |
