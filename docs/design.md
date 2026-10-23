@@ -312,7 +312,34 @@ On the laptop or the dev PC, with REDnode 0.26.16 and REDagent 0.2.0. Use the **
 
 Found: installing the SDK with npm on the player's PC worked, the route proposed for the release. A first question that reads the game costs about $0.45 on Opus, mostly cache reads of the briefing across tool calls; worth showing players, and worth a look at the briefing's size before the release (unverified how much Sonnet saves here).
 
-## Phases
+## 0.3.0: the first release
+
+Agreed with the user on 2026-10-23: players fetch the Claude Agent SDK at first start. Its licence is Anthropic's (all rights reserved), so REDagent's zip never carries it.
+
+| Change | Why |
+|---|---|
+| `redagent/sdk.mjs`: **Get the Agent SDK** downloads the pinned packages (`@anthropic-ai/claude-agent-sdk` and `-win32-x64`, 0.3.308) from registry.npmjs.org, checks each against npm's sha512 integrity, and unpacks them into `<dataDir>/sdk/<version>`, moving them into place only once both are whole | No redistribution of Anthropic's files; a broken or tampered download is never used. The SDK's code imports only Node's own modules, so it runs from the data folder, with `claude.exe` passed by path |
+| A developer's `node_modules` with the same SDK version is used instead | A deploy from the repo needs no download |
+| The window's first panel offers the download, with its progress; the key panel comes after it. Questions, and other mods' questions, are refused with a message until then | One step at a time at first start |
+| REDnode 0.32's `game_facts` and `game_journal` run without asking; its quest changes keep their card | They only read |
+| `requires: { "rednode": ">=0.32.1" }` | The first REDnode release with those tools and `api_read`'s fixed rule |
+| `tools/release-zip.mjs`, `tools/notes.mjs`, the **Release zip** workflow | The player zip (about 60 KB, no node_modules) and its GitHub release, as REDnode's |
+
+Checked without the game on 2026-10-23: the download (136 MB, under 3 s on the dev PC) matched npm's own install file for file; a wrong hash was refused with nothing left behind; `agent.mjs`, run from the zip's files with a stand-in for the `rednode` package, showed the SDK missing, refused a question, got the SDK, then ran a whole turn through the downloaded `claude.exe` against a stand-in API.
+
+### 0.3.0 release test
+
+A clean install on the laptop, from the release zips. Use the **Test timer**: Start, then Mark after each step.
+
+Before: close the game. Delete `red4ext\plugins\REDnode\apps\redagent` in the game folder, and rename `%APPDATA%\@rednode\overlay\packages\redagent` to `redagent-old` (it keeps your chats; put it back after if you want them). Extract REDnode's `REDnode-0.32.1.zip` from its GitHub release into the game folder, then `REDagent-0.3.0.zip`.
+
+1. Start the game and load a save. The REDagent window shows **Get the Agent SDK**. Press it: the progress counts up to about 136 MB, then the key panel appears. Mark.
+2. **F10**: in the launcher, switch **Allowed** on for REDagent's "REDnode's tools for AI agents". Mark.
+3. Paste your API key and press **Save key**. The chat appears. Mark.
+4. Ask: "What are V's health, level and money, and which quest is tracked?" It answers from the game **without** a card. Mark.
+5. Ask: "Make a small mod that shows V's money in a window." A card shows the new file; **Allow**. The window appears. Press **Undo** on the change: the window goes. Mark.
+6. Quit to the desktop and start the game again. REDagent opens on the chat, with no download and no key asked for. Mark.
+7. Quit the game. Send `rednode-mods.log`.
 
 Each phase ends with an in-game test, as in REDnode.
 
