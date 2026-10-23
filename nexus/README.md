@@ -25,7 +25,7 @@ The source of REDagent's Nexus Mods page. Not on Nexus yet: the first release wa
 | Mod name | REDagent |
 | Version | The version in `redagent/package.json` (0.3.0) |
 | Category | Modders Resources and Tutorials |
-| Brief overview | An assistant inside Cyberpunk 2077, powered by Claude, that writes, runs, checks and fixes REDnode mods with you while you play. Uses your own Anthropic API key. For game version 2.31. (255 characters at most; this is 191) |
+| Brief overview | An assistant inside Cyberpunk 2077, powered by Claude, that writes, runs, checks and fixes REDnode mods with you while you play. Uses your own Anthropic API key. For game version 2.31. (255 characters at most; this is 184) |
 | Author | Edgemodders |
 | Language | English |
 | Primary image | The owner's thumbnail. The banner is already at the top of the description |
