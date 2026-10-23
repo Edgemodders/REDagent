@@ -10,8 +10,8 @@
 #                                               and redagent/rednode-app.json) or docs/changelog.md
 #                                               has no section for it (tools/notes.mjs)
 #
-# The briefing is copied from REDnode's guide at the tag of the REDnode it needs (the
-# "rednode" input, v0.32.1 by default).
+# The briefing is copied from REDnode's guide at the tag of the REDnode REDagent needs: the
+# version in redagent/rednode-app.json's "requires" (">=0.32.1" reads REDnode's v0.32.1).
 #
 # Release gate: make a release only after every in-game test of the builds since the last
 # release has passed (docs/design.md). Untested or failed means no release.
@@ -24,10 +24,6 @@ on:
         description: Make a release (tags this commit v<version>). Only after every in-game test has passed
         type: boolean
         default: false
-      rednode:
-        description: REDnode tag to copy the briefing from
-        type: string
-        default: v0.32.1
 
 permissions:
   contents: write
@@ -41,10 +37,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: The REDnode REDagent needs
+        id: rednode
+        run: |
+          $needs = (Get-Content redagent/rednode-app.json -Raw | ConvertFrom-Json).requires.rednode
+          if ($needs -notmatch '^>=\s*(\d+\.\d+\.\d+)$') {
+            Write-Output "::error::redagent/rednode-app.json's requires.rednode should be '>=x.y.z', not '$needs'"
+            exit 1
+          }
+          "tag=v$($Matches[1])" >> $env:GITHUB_OUTPUT
+
       - uses: actions/checkout@v4
         with:
           repository: Edgemodders/REDnode
-          ref: ${{ inputs.rednode }}
+          ref: ${{ steps.rednode.outputs.tag }}
           path: rednode-src
           sparse-checkout: docs/overlay-apps.md
           sparse-checkout-cone-mode: false
