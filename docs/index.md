@@ -11,7 +11,7 @@ REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fix
 
 ## Roadmap status
 
-As of 2026-10-22. An early developer build; there is no packaged release yet, so it installs from source as the guide describes. Each phase ends with an in-game test.
+As of 2026-10-24. **REDagent 0.3.0 was released on 2026-10-23** on [GitHub](https://github.com/Edgemodders/REDagent/releases) and Nexus, for game 2.31; the [guide](guide.html) installs it from the release zip. Each phase ends with an in-game test.
 
 | Phase | Status |
 |---|---|
@@ -20,8 +20,9 @@ As of 2026-10-22. An early developer build; there is no packaged release yet, so
 | C3 Authoring | Done, passed in game 2026-10-12, fixes passed a second test the same day. Write and Edit kept to the apps folders, a diff card for every change with Allow, Allow all in this chat and Deny, a backup of every file before it changes, Undo from a changes strip |
 | C4 Polish | Done, passed in game 2026-10-13. Chats kept on disk and listed, with Undo after a restart; the game's screen through REDnode's `game_image`, with or without the overlay; a waiting line while a card needs you; the Test timer app. HDR capture has unit tests only, not yet seen in game |
 | C5 Agent API for mods | Done, passed in game 2026-10-13. Mods ask with `agent.ask` in the `rednode` package once the player allows their `agent` permission; REDagent answers one at a time on Sonnet 5.5 with read-only tools, within a daily limit per mod ($0.25 by default), shown and changed in its Mods view |
+| 0.3.1 Mods' tools | Done, passed in game 2026-10-24 with REDnode 0.36.0. REDagent uses the tools other mods offer: those marked read-only run without asking, the rest ask you first |
 | C6 REDagent in REDcode | Not started. The agent as a core package with two front ends, the in-game chat and a view in REDcode, with edits reviewed in VS Code's diff editor and REDbridge's WolvenKit operations as tools |
 
-O8, REDnode's Mod Manager, passed in game on 2026-10-13. Next, agreed on 2026-10-22: the first release on GitHub and Nexus, before C6. Its first step, [0.2.0](design.html#020-catching-up-with-rednode), catches up with REDnode 0.26.16's tools and passed in game on 2026-10-22. The release follows on game 2.31, since REDnode waits for RED4ext, redscript and Codeware to support 2.5. See the [changelog](changelog.html).
+Next: the 0.3.1 release, then C6. REDagent stays on game 2.31 until REDnode moves to 2.5, which waits for RED4ext, redscript and Codeware. See the [changelog](changelog.html).
 
 REDagent is not affiliated with CD Projekt RED or Anthropic. Source code and issues: [github.com/Edgemodders/REDagent](https://github.com/Edgemodders/REDagent)

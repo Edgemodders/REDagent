@@ -2,7 +2,7 @@
 
 REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fixes [REDnode](https://github.com/Edgemodders/REDnode) mods and overlay apps with the player, while they play. It works through the REDnode runtime (the "kernel") that mods use: the game API, the mod log, the apps, the overlay windows. Powered by Claude.
 
-Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). **C4, polish, passed in game on 2026-10-13** (results below). O8 Mod Manager in REDnode passed too. **C5, the agent API for mods, passed in game on 2026-10-13** (results below). Next: C6, REDagent in REDcode, agreed with the user.
+Status: **C1, the kernel MCP server, passed in game on 2026-10-12** (in the REDnode repo, [docs](https://edgemodders.github.io/REDnode/mcp.html)). **C2, the chat in the game, passed in game on 2026-10-12.** **C3, authoring, passed in game on 2026-10-12**, and its fixes, Undo included, passed a second test the same day (results below). **C4, polish, passed in game on 2026-10-13** (results below). O8 Mod Manager in REDnode passed too. **C5, the agent API for mods, passed in game on 2026-10-13** (results below). **0.3.0 released on 2026-10-23**; **0.3.1** (other mods' tools, with REDnode 0.36.0) passed in game on 2026-10-24. Next: C6, REDagent in REDcode, agreed with the user.
 
 ## What it can do
 
@@ -41,7 +41,7 @@ From Anthropic's Agent SDK docs, checked 2026-10-12:
 | Piece | Repo | What it is |
 |---|---|---|
 | Kernel MCP server | REDnode | The overlay host serves REDnode's tools over MCP on localhost, protected by a token. One server, two clients: REDagent in the game, and Claude Code on the desktop |
-| Package permissions | REDnode | A package asks for powers in its manifest, for example `"permissions": ["logs", "apps", "capture", "files"]`. The player grants them once in the launcher. Today only apps built into the host have them |
+| Package permissions | REDnode | A package asks for powers in its manifest, for example `"permissions": ["logs", "apps", "capture", "files"]`. The player grants each once in the Mod Manager. REDnode's list: `mcp`, `agent`, `bridge`, `front`, `solo`, `archives` |
 | REDagent package | REDagent | A REDnode package: a chat window (overlay app) and the agent (a Node mod in its own process), the briefing, and the settings for the key and the model |
 
 ## The agent
@@ -321,7 +321,7 @@ Agreed with the user on 2026-10-23: players fetch the Claude Agent SDK at first 
 | `redagent/sdk.mjs`: **Get the Agent SDK** downloads the pinned packages (`@anthropic-ai/claude-agent-sdk` and `-win32-x64`, 0.3.308) from registry.npmjs.org, checks each against npm's sha512 integrity, and unpacks them into `<dataDir>/sdk/<version>`, moving them into place only once both are whole | No redistribution of Anthropic's files; a broken or tampered download is never used. The SDK's code imports only Node's own modules, so it runs from the data folder, with `claude.exe` passed by path |
 | A developer's `node_modules` with the same SDK version is used instead | A deploy from the repo needs no download |
 | The window's first panel offers the download, with its progress; the key panel comes after it. Questions, and other mods' questions, are refused with a message until then | One step at a time at first start |
-| REDnode 0.32's `game_facts` and `game_journal` run without asking; its quest changes keep their card | They only read |
+| REDnode 0.32's `game_facts` and `game_journal` run without asking; its quest changes (`game_facts_set`, `game_journal_set`, `game_teleport`) are refused, as every kernel tool REDagent does not list | The reads only read. The changes need a card of their own first (unbuilt) |
 | `requires: { "rednode": ">=0.32.1" }` | The first REDnode release with those tools and `api_read`'s fixed rule |
 | `tools/release-zip.mjs`, `tools/notes.mjs`, the **Release zip** workflow | The player zip (about 60 KB, no node_modules) and its GitHub release, as REDnode's |
 

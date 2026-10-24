@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://edgemodders.github.io/REDagent/"><img src="docs/assets/brand/badges/docs.svg" alt="docs: read the docs"></a>
-  <img src="docs/assets/brand/badges/status.svg" alt="status: C4 passed">
+  <img src="docs/assets/brand/badges/status.svg" alt="status: 0.3.0 released">
   <a href="https://github.com/Edgemodders/REDnode"><img src="docs/assets/brand/badges/rednode.svg" alt="runs in: REDnode"></a>
   <img src="docs/assets/brand/badges/claude.svg" alt="powered by: Claude">
   <a href="LICENSE"><img src="docs/assets/brand/badges/license.svg" alt="license: MIT"></a>
@@ -17,14 +17,14 @@ You ask, in a chat window in the game: "make me a mod that warns me when my heal
 **[Read the guide](https://edgemodders.github.io/REDagent/guide.html)** &middot; [Docs](https://edgemodders.github.io/REDagent/) &middot; [Design](docs/design.md) &middot; [REDnode](https://github.com/Edgemodders/REDnode) &middot; [REDcode](https://github.com/Edgemodders/REDcode)
 
 > [!NOTE]
-> **Status: phase C4, chat history and seeing the game's screen, passed in game.** C1, the REDnode kernel's MCP server, and C2, the chat in the game, passed in game. Phases and results are in [docs/design.md](docs/design.md).
+> **Status: 0.3.0 released on 2026-10-23** ([releases](https://github.com/Edgemodders/REDagent/releases)), for game 2.31. Phases C1 to C5 passed in game; 0.3.1, which uses other mods' tools, passed in game on 2026-10-24. Phases and results are in [docs/design.md](docs/design.md); players start with the [guide](https://edgemodders.github.io/REDagent/guide.html).
 
 ## Install (developers)
 
 1. Deploy [REDnode](https://github.com/Edgemodders/REDnode) to the game.
 2. `cd redagent && npm install`
 3. `.\tools\deploy.ps1 -GameDir '<your Cyberpunk 2077 folder>'`
-4. In the game, allow REDagent to use REDnode's tools in the REDnode launcher, then paste your API key into REDagent.
+4. In the game, allow REDagent to use REDnode's tools in the REDnode Mod Manager, then paste your API key into REDagent.
 
 `node tools/check-key.mjs` checks a key outside the game. `.\tools\brand\render.ps1` renders the banner, icon and badges.
 

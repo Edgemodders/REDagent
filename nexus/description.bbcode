@@ -35,7 +35,7 @@ It cannot press keys or move the mouse in the game, run commands or install pack
 [*][b]Every file change is shown first[/b] as a diff, added lines in green and removed in red: [b]Allow[/b], [b]Allow all in this chat[/b] or [b]Deny[/b].[/*]
 [*][b]Every change has Undo.[/b] REDagent backs up each file before it changes it.[/*]
 [*][b]It writes only in REDnode's apps folders[/b], never its own files, never a node_modules folder, nowhere else on your PC.[/*]
-[*][b]It asks you before every call that could change your game[/b] (money, health, quest facts, moving V) and before every archive swap. Reads never ask.[/*]
+[*][b]It asks you before every call that could change your game[/b] (money, health) and before every archive swap. Reads never ask. Quest changes and moving V are not available to it.[/*]
 [*][b]Each answer shows its cost[/b], with the chat's running total.[/*]
 [/list]
 [size=5][b][color=#fcee0a]Mods can ask it too[/color][/b][/size]
@@ -61,7 +61,7 @@ Other mods can ask REDagent questions and show you the answers, for example a mo
 
 [list=1]
 [*]Start the game. The REDagent window opens on the right. Press [b]Get the Agent SDK[/b] and wait for it to finish.[/*]
-[*]Press [b]F10[/b] to open the REDnode launcher. Find REDagent and switch [b]Allowed[/b] on for "REDnode's tools for AI agents", so it can see the game and your mods' logs.[/*]
+[*]Press [b]F10[/b], open the [b]Mod Manager[/b] at the top of the REDnode launcher and select REDagent. Switch [b]Allowed[/b] on for "REDnode's tools for AI agents", so it can see the game and your mods' logs.[/*]
 [*]Paste your API key into REDagent and press [b]Save key[/b]. The chat appears.[/*]
 [*]Ask something short, like "What's in my mod log?"[/*]
 [/list]
@@ -88,7 +88,7 @@ You pay Anthropic per use, and each answer shows what it cost. [b]Opus 5.5[/b] (
 No. Anthropic does not allow claude.ai logins in third-party products, so REDagent uses an API key, billed per use.
 
 [b]It says REDnode's tools are off.[/b]
-Press F10 and, in the launcher, switch [b]Allowed[/b] on for REDagent.
+Press F10, open the [b]Mod Manager[/b], select REDagent and switch [b]Allowed[/b] on.
 
 [b]Get the Agent SDK failed.[/b]
 Check your connection and press it again. A partial download is thrown away, never used.

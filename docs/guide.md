@@ -48,7 +48,7 @@ REDagent runs on Anthropic's Claude Agent SDK. The SDK is Anthropic's, not open 
 ## First run
 
 1. Start the game. The REDagent window opens on the right. Press **Get the Agent SDK** and wait for it to finish. Then it asks for your key.
-2. Press **F10** to open the REDnode launcher. Find REDagent and switch **Allowed** on for "REDnode's tools for AI agents". Without this, REDagent can still chat and read your mods' files, but it cannot see the Mod log, the game or overlay windows.
+2. Press **F10**, open the **Mod Manager** at the top of the REDnode launcher and select **REDagent**. Under its permissions, switch **Allowed** on for "REDnode's tools for AI agents". (A new package is listed only in the Mod Manager until you press **Pin to launcher** there.) Without this, REDagent can still chat and read your mods' files, but it cannot see the Mod log, the game or overlay windows.
 3. Copy your API key. Click the key field in REDagent, press **Ctrl+V**, then **Save key**. The chat appears.
 4. Ask something short, like "What's in my mod log?"
 
@@ -76,7 +76,7 @@ Chats are kept in `%APPDATA%\@rednode\overlay\packages\redagent\chats`.
 
 ## Mods that ask REDagent
 
-Other mods can ask REDagent questions and show you the answers, for example a mod that suggests a build or explains an error. A mod can ask only once you allow its "questions to the AI assistant" permission in the REDnode launcher or Mod Manager.
+Other mods can ask REDagent questions and show you the answers, for example a mod that suggests a build or explains an error. A mod can ask only once you allow its "questions to the AI assistant" permission in the REDnode Mod Manager.
 
 | What | How it works |
 |---|---|
@@ -112,12 +112,12 @@ In our first test, six questions (five on Opus 5.5, one on Sonnet 5.5) cost $0.3
 
 | You see | Do this |
 |---|---|
-| "REDnode's tools are off" | In the launcher (F10), switch **Allowed** on for REDagent |
+| "REDnode's tools are off" | F10, **Mod Manager**, select REDagent, and switch **Allowed** on for "REDnode's tools for AI agents" |
 | **Get the Agent SDK** fails | Check your connection and press it again. A partial or mismatched download is thrown away, never used |
 | "That does not look like an Anthropic API key" | Copy the whole key. Anthropic keys start with `sk-ant-` |
 | An error about your key or credit | Check the key and your credit at console.anthropic.com, then press **Key** and save the key again |
 | REDagent asks for your key again | The saved key could not be read, for example after a Windows account change. Paste it again |
-| The window is gone | Open it again from the launcher (F10) |
+| The window is gone | F10, **Mod Manager**: check REDagent is switched on, and press **Show** if its window was closed. **Pin to launcher** keeps it one press away |
 | Anything else | Open the REDnode Mod log app. REDagent's lines start with `[redagent]` |
 
 ## More
