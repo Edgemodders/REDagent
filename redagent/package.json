@@ -1,6 +1,6 @@
 {
   "name": "redagent",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "REDagent: an in-game assistant for REDnode mods, powered by Claude. A REDnode package.",
   "license": "MIT",

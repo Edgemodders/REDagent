@@ -10,6 +10,10 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+**New**
+
+- Uses the tools other mods offer through REDnode (REDnode 0.36.0 and later): those that only read run at once, the rest ask you first, as the game API's calls do. Questions from mods may use only the reading ones.
+
 ## 0.3.0 (2026-10-23)
 
 The first release, for game version 2.31. REDagent is an assistant inside Cyberpunk 2077, powered by Claude, that writes, runs, checks and fixes REDnode mods with you while you play. It uses your own Anthropic API key.

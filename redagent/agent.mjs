@@ -84,6 +84,9 @@ const READ_ONLY = [
   'game_facts',
   'game_journal',
 ].map((t) => KERNEL + t);
+// Mods' own tools (REDnode 0.36.0 and later): <package>__<function>, and mod_services,
+// mod_read and mod_call. Which ones only read comes from REDnode's tool list.
+const MOD_READ = [KERNEL + 'mod_services', KERNEL + 'mod_read'];
 const READ_TOOLS = ['Read', 'Glob', 'Grep'];
 const WRITE_TOOLS = ['Write', 'Edit'];
 const FILE_TOOLS = [...READ_TOOLS, ...WRITE_TOOLS];
@@ -427,8 +430,36 @@ function undo(editId) {
   console.log(`Undid the change to ${shortPath(e.file)}`);
 }
 
+// Whether a mod's tool only reads, from REDnode's tool list (its readOnlyHint), asked of
+// the kernel MCP server and kept for 15 s.
+let modToolList = { at: 0, reads: new Map() };
+async function modToolReads(name) {
+  if (Date.now() - modToolList.at > 15000) {
+    const reads = new Map();
+    try {
+      const m = await kernel.mcp();
+      const res = await fetch(m.url, {
+        method: 'POST',
+        headers: { ...m.headers, 'content-type': 'application/json', accept: 'application/json, text/event-stream' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} }),
+      });
+      for (const t of (await res.json()).result?.tools ?? []) reads.set(KERNEL + t.name, !!t.annotations?.readOnlyHint);
+    } catch {
+      // unknown: such tools ask
+    }
+    modToolList = { at: Date.now(), reads };
+  }
+  return modToolList.reads.get(name) === true;
+}
+const isModTool = (name) => name.startsWith(KERNEL) && name.slice(KERNEL.length).includes('__');
+
 function describe(name, input) {
   const t = name.startsWith(KERNEL) ? name.slice(KERNEL.length) : name;
+  if (t === 'mod_call') return `use ${input.package}'s tool ${input.function}(${JSON.stringify(input.args ?? {})})`;
+  if (t.includes('__')) {
+    const [pkg, fn] = t.split('__');
+    return `use ${pkg.replace(/_/g, '-')}'s tool ${fn}(${JSON.stringify(input ?? {})})`;
+  }
   if (t === 'api_call') {
     const where = input.class ? `${input.class}.` : input.self !== undefined ? `object ${input.self} ` : '';
     return `call the game: ${where}${input.fn}(${JSON.stringify(input.args ?? []).slice(1, -1)})`;
@@ -469,7 +500,9 @@ async function canUseTool(name, input, { signal, toolUseID }) {
   if (WRITE_TOOLS.includes(name)) return confirmChange(name, input, toolUseID, signal);
   const t = name.startsWith(KERNEL) ? name.slice(KERNEL.length) : null;
   if (t === 'apps' && (!input.action || input.action === 'list')) return { behavior: 'allow', updatedInput: input };
-  if (t === 'api_call' || t === 'apps' || t === 'archives_reload') {
+  // Mods' tools: those that only read run, the rest ask, as in Claude Code.
+  if (MOD_READ.includes(name) || (isModTool(name) && (await modToolReads(name)))) return { behavior: 'allow', updatedInput: input };
+  if (t === 'api_call' || t === 'apps' || t === 'archives_reload' || t === 'mod_call' || isModTool(name)) {
     const ok = await askPlayer(describe(name, input), signal);
     return ok
       ? { behavior: 'allow', updatedInput: input }
@@ -805,6 +838,7 @@ async function answerMod(req, st) {
   const readOnly = new Set([...READ_TOOLS, ...READ_ONLY.filter((t) => st.pictures || !PICTURES.includes(t))]);
   const canUse = async (name, input) => {
     if (readOnly.has(name)) return { behavior: 'allow', updatedInput: input };
+    if (MOD_READ.includes(name) || (isModTool(name) && (await modToolReads(name)))) return { behavior: 'allow', updatedInput: input };
     if (name === `${KERNEL}apps` && (!input.action || input.action === 'list')) return { behavior: 'allow', updatedInput: input };
     return { behavior: 'deny', message: 'Questions from mods may only read; this tool is not available to them.' };
   };
