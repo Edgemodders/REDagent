@@ -10,9 +10,17 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+## 0.3.1 (2026-10-24)
+
+**The last release for game version 2.31**, like REDnode 0.37.0. The next release moves to 2.5 with REDnode.
+
 **New**
 
 - Uses the tools other mods offer through REDnode (REDnode 0.36.0 and later): those that only read run at once, the rest ask you first, as the game API's calls do. Questions from mods may use only the reading ones.
+
+**Other**
+
+- The guide shows where to allow REDnode's tools: REDnode's Mod Manager, since a new package is not in the launcher until you pin it.
 
 ## 0.3.0 (2026-10-23)
 
