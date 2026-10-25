@@ -10,6 +10,15 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+## 0.3.2 (2026-10-25)
+
+**The first release for game version 2.5**, with REDnode 0.38.1. For game 2.31, use REDagent 0.3.1.
+
+**Changed**
+
+- Needs REDnode 0.38.1 or later, on game version 2.5.
+- REDagent's briefing, its copy of REDnode's guide, now comes from REDnode 0.38.1: it knows development folders, calling other packages (mod services) and describing a service, so it can write mods that use them.
+
 ## 0.3.1 (2026-10-24)
 
 **The last release for game version 2.31**, like REDnode 0.37.0. The next release moves to 2.5 with REDnode.

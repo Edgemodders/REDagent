@@ -42,7 +42,7 @@ writeFileSync(
   [
     `REDagent ${version}: an assistant for REDnode mods inside Cyberpunk 2077, powered by Claude.`,
     '',
-    'For game version 2.31 only, like REDnode. Game version 2.5 is not supported yet.',
+    'For game version 2.5, like REDnode 0.38.1. For game 2.31, use REDagent 0.3.1.',
     '',
     `Needs: REDnode ${rednodeNeeded} (https://github.com/Edgemodders/REDnode/releases), and your own`,
     'Anthropic API key (console.anthropic.com, under API keys). Anthropic bills you for what you use.',

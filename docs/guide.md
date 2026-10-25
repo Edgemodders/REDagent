@@ -29,14 +29,14 @@ It sees the game's screen only when it takes a picture, which it does when it ne
 
 | You need | Why |
 |---|---|
-| Cyberpunk 2077 on PC, **game version 2.31**, with [REDnode](https://github.com/Edgemodders/REDnode/releases) 0.32.1 or later installed | REDagent is a REDnode package. REDnode draws its window and gives it the game's tools. Game version 2.5 is not supported yet: REDnode and REDagent move to it once RED4ext, redscript and Codeware support it |
+| Cyberpunk 2077 on PC, **game version 2.5**, with [REDnode](https://github.com/Edgemodders/REDnode/releases) 0.38.1 or later installed | REDagent is a REDnode package. REDnode draws its window and gives it the game's tools. For game 2.31, use REDagent 0.3.1 with REDnode 0.37.0 |
 | Your own Anthropic API key | REDagent calls Claude with your key, and Anthropic bills you for what you use. Get one at [console.anthropic.com](https://console.anthropic.com/) under API keys. No key ships with REDagent. A Claude.ai subscription cannot be used |
 | About 300 MB of disk, and a 140 MB download at first start | REDagent runs on Anthropic's Claude Agent SDK. It is not in REDagent's zip: REDagent downloads it once, when you press **Get the Agent SDK** |
 | About 120 MB of memory while the game runs | REDagent runs in its own Node process, outside the game |
 
 ## Install
 
-1. Install [REDnode](https://github.com/Edgemodders/REDnode/releases) 0.32.1 or later, with its own requirements (RED4ext and redscript).
+1. Install [REDnode](https://github.com/Edgemodders/REDnode/releases) 0.38.1 or later, with its own requirements (RED4ext and redscript).
 2. Download `REDagent-<version>.zip` from [REDagent's releases](https://github.com/Edgemodders/REDagent/releases). Extract it into your Cyberpunk 2077 folder, or add it to Vortex or EDGEdeck. It puts REDagent in `red4ext\plugins\REDnode\apps\redagent`.
 
 To install from source instead, for working on REDagent itself: deploy REDnode following its [developer setup](https://edgemodders.github.io/REDnode/dev-setup.html), clone REDagent beside REDnode, close the game and run `.\tools\deploy.ps1 -GameDir '<your Cyberpunk 2077 folder>'`. With `npm install` run in the `redagent` folder first, REDagent uses the Agent SDK from there and skips the download.

@@ -4,7 +4,7 @@
 
 <p align="center">
   <a href="https://edgemodders.github.io/REDagent/"><img src="docs/assets/brand/badges/docs.svg" alt="docs: read the docs"></a>
-  <img src="docs/assets/brand/badges/status.svg" alt="status: 0.3.1 released">
+  <img src="docs/assets/brand/badges/status.svg" alt="status: 0.3.2 released">
   <a href="https://github.com/Edgemodders/REDnode"><img src="docs/assets/brand/badges/rednode.svg" alt="runs in: REDnode"></a>
   <img src="docs/assets/brand/badges/claude.svg" alt="powered by: Claude">
   <a href="LICENSE"><img src="docs/assets/brand/badges/license.svg" alt="license: MIT"></a>
@@ -17,7 +17,7 @@ You ask, in a chat window in the game: "make me a mod that warns me when my heal
 **[Read the guide](https://edgemodders.github.io/REDagent/guide.html)** &middot; [Docs](https://edgemodders.github.io/REDagent/) &middot; [Design](docs/design.md) &middot; [REDnode](https://github.com/Edgemodders/REDnode) &middot; [REDcode](https://github.com/Edgemodders/REDcode)
 
 > [!NOTE]
-> **Status: 0.3.1 released on 2026-10-24**, for game 2.31: [Nexus Mods](https://www.nexusmods.com/cyberpunk2077/mods/35670) or [GitHub releases](https://github.com/Edgemodders/REDagent/releases). Needs [REDnode](https://www.nexusmods.com/cyberpunk2077/mods/35419). Phases C1 to C5 passed in game; 0.3.1 uses other mods' tools. Phases and results are in [docs/design.md](docs/design.md); players start with the [guide](https://edgemodders.github.io/REDagent/guide.html).
+> **Status: 0.3.2 released on 2026-10-25**, for game 2.5 (for 2.31, use 0.3.1): [Nexus Mods](https://www.nexusmods.com/cyberpunk2077/mods/35670) or [GitHub releases](https://github.com/Edgemodders/REDagent/releases). Needs [REDnode](https://www.nexusmods.com/cyberpunk2077/mods/35419). Phases C1 to C5 passed in game; 0.3.1 uses other mods' tools. Phases and results are in [docs/design.md](docs/design.md); players start with the [guide](https://edgemodders.github.io/REDagent/guide.html).
 
 ## Install (developers)
 

@@ -11,7 +11,7 @@ REDagent is an assistant inside Cyberpunk 2077 that writes, runs, checks and fix
 
 ## Roadmap status
 
-As of 2026-10-24. **REDagent 0.3.0 was released on 2026-10-23** on [GitHub](https://github.com/Edgemodders/REDagent/releases) and Nexus, for game 2.31; the [guide](guide.html) installs it from the release zip. Each phase ends with an in-game test.
+As of 2026-10-25. **REDagent 0.3.2 was released on 2026-10-25** on [GitHub](https://github.com/Edgemodders/REDagent/releases) and Nexus, for game 2.5 with REDnode 0.38.1 (0.3.1 is the last for game 2.31); the [guide](guide.html) installs it from the release zip. Each phase ends with an in-game test.
 
 | Phase | Status |
 |---|---|
@@ -23,6 +23,6 @@ As of 2026-10-24. **REDagent 0.3.0 was released on 2026-10-23** on [GitHub](http
 | 0.3.1 Mods' tools | Done, passed in game 2026-10-24 with REDnode 0.36.0. REDagent uses the tools other mods offer: those marked read-only run without asking, the rest ask you first |
 | C6 REDagent in REDcode | Not started. The agent as a core package with two front ends, the in-game chat and a view in REDcode, with edits reviewed in VS Code's diff editor and REDbridge's WolvenKit operations as tools |
 
-Next: the 0.3.1 release, then C6. REDagent stays on game 2.31 until REDnode moves to 2.5, which waits for RED4ext, redscript and Codeware. See the [changelog](changelog.html).
+Next: C6. See the [changelog](changelog.html).
 
 REDagent is not affiliated with CD Projekt RED or Anthropic. Source code and issues: [github.com/Edgemodders/REDagent](https://github.com/Edgemodders/REDagent)
