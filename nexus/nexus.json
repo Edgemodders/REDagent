@@ -1,0 +1,18 @@
+{
+  "page": 35670,
+  "mod": "14315126033238",
+  "file": 8216541,
+  "upload": {
+    "name": "REDagent",
+    "category": "main",
+    "primary": true,
+    "modManager": true,
+    "archivePrevious": true,
+    "description": "REDagent {version} for game 2.5. Needs REDnode 0.38.1 or later and your own Anthropic API key. Downloads Anthropic's Claude Agent SDK (about 140 MB) at first start."
+  },
+  "pulled": {
+    "sha256": "4460a8a9933a2da1256f373c7b9c02b487c1751f2b2c48f3c58c4b90cc6f5817",
+    "at": "2026-10-25T17:02:58.688Z",
+    "version": "0.3.0"
+  }
+}

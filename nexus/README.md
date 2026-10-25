@@ -24,11 +24,11 @@ The source of REDagent's Nexus Mods page. **Live at [mod 35670](https://www.nexu
 | Mod name | REDagent |
 | Version | The version in `redagent/package.json` (0.3.0) |
 | Category | Modders Resources and Tutorials |
-| Brief overview | An assistant inside Cyberpunk 2077, powered by Claude, that writes, runs, checks and fixes REDnode mods with you while you play. Uses your own Anthropic API key. For game version 2.31. (255 characters at most; this is 184) |
+| Brief overview | An assistant inside Cyberpunk 2077, powered by Claude, that writes, runs, checks and fixes REDnode mods with you while you play. Uses your own Anthropic API key. For game version 2.5. (255 characters at most; this is 183) |
 | Author | Edgemodders |
 | Language | English |
 | Primary image | The owner's thumbnail. The banner is already at the top of the description |
-| Requirements | REDnode (its Nexus page; note: "0.32.1 or later"). Off-site: an Anthropic API key (console.anthropic.com; note: "Billed by Anthropic per use"). The Claude Agent SDK has no entry: REDagent downloads it, as the description explains |
+| Requirements | REDnode (its Nexus page; note: "0.38.1 or later"). Off-site: an Anthropic API key (console.anthropic.com; note: "Billed by Anthropic per use"). The Claude Agent SDK has no entry: REDagent downloads it, as the description explains |
 | Permissions | MIT. Note that the Claude Agent SDK is Anthropic's and is not in the download |
 | Tags | Modders resource, utility |
 
@@ -44,11 +44,14 @@ red4ext/plugins/REDnode/apps/redagent/
 
 ### File description on Nexus
 
-> REDagent &lt;version&gt;. Needs REDnode 0.32.1 or later and your own Anthropic API key. Downloads Anthropic's Claude Agent SDK (about 140 MB) at first start. Game version 2.31.
+The release workflow sets it from `upload.description` in `nexus.json` ({version} is replaced):
+
+> REDagent {version} for game 2.5. Needs REDnode 0.38.1 or later and your own Anthropic API key. Downloads Anthropic's Claude Agent SDK (about 140 MB) at first start.
 
 ## Updating the page
 
-1. Edit `description.bbcode` here, commit, push.
-2. Check it: `node ../REDnode/tools/check-bbcode.mjs nexus/description.bbcode`.
-3. Paste the whole file into the description field on Nexus and save.
-4. For a new version: the release gate first (every in-game test of what goes in has passed), then raise the version in `redagent/package.json` and `redagent/rednode-app.json`, rename **Unreleased** in `docs/changelog.md` to `## <version> (<date>)`, run the Release zip workflow with **Make a release**, upload the zip as the main file, and paste `node tools/notes.mjs --nexus` into the page's changelog for the version.
+The page is kept through Nexus's v3 API with the owner's key, as REDnode's is (`tools/nexus/`, copied from REDnode's; its README's "Updating the page" has the details). `nexus.json` holds the page number, the internal mod id, the main file's id, how a new version is uploaded (`upload`) and the hash of the description last pulled.
+
+1. `node tools/nexus/nexus.mjs pull` first, and commit what it changed, so an edit made on Nexus (pictures added by hand) is not lost. `node tools/nexus/nexus.mjs status` shows the page's version, its main file's versions and whether the description changed on Nexus.
+2. Edit `description.bbcode`, check it with `node ../REDnode/tools/check-bbcode.mjs nexus/description.bbcode`, commit, push. The next release pushes it.
+3. For a new version: the release gate first (every in-game test of what goes in has passed), then raise the version in `redagent/package.json` and `redagent/rednode-app.json`, rename **Unreleased** in `docs/changelog.md` to `## <version> (<date>)`, and run the Release zip workflow with **Make a release** and **Update Nexus Mods**. It checks the page first, then uploads the zip as the main file's new version (the old one archived, the page's version set), adds the version's changelog from `node tools/notes.mjs --nexus`, and pushes the description. If the Nexus step fails after the GitHub release, run `node tools/nexus/nexus.mjs release --version <v> --zip <zip> --notes <file>` on the dev PC.
