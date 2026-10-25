@@ -1,6 +1,6 @@
 # REDagent on Nexus Mods
 
-The source of REDagent's Nexus Mods page. Not on Nexus yet: the first release waits for its release test on a clean install (docs/design.md), after REDnode 0.32.1 is released.
+The source of REDagent's Nexus Mods page. **Live at [mod 35670](https://www.nexusmods.com/cyberpunk2077/mods/35670)** (0.3.1 on 2026-10-24). REDnode's page is [mod 35419](https://www.nexusmods.com/cyberpunk2077/mods/35419).
 
 | File | What it is |
 |---|---|
@@ -15,7 +15,6 @@ The source of REDagent's Nexus Mods page. Not on Nexus yet: the first release wa
 
 | In `description.bbcode` | Replace with |
 |---|---|
-| `REDNODE_PAGE` (four links) | REDnode's Nexus mod id, once its page is up |
 | `Screenshot 1` to `Screenshot 3` (cyan italics) | Upload each picture to the page's Images tab, then replace its line with `[img]<the image's Nexus URL>[/img]` and a one-line caption |
 
 ## The Nexus form
