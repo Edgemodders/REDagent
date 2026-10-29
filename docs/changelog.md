@@ -10,6 +10,10 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+**New**
+
+- Knows EDGEmat's material tools, which REDnode 0.45.0 runs for in-game assistants: ask REDagent to find a garment's materials, explain their layers, or recolor them in your WolvenKit project. Searches run at once; changes ask you first.
+
 ## 0.3.2 (2026-10-25)
 
 **The first release for game version 2.5**, with REDnode 0.38.1. For game 2.31, use REDagent 0.3.1.
