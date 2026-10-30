@@ -49,7 +49,7 @@ REDagent runs on Anthropic's Claude Agent SDK. The SDK is Anthropic's, not open 
 
 1. Start the game. The REDagent window opens on the right. Press **Get the Agent SDK** and wait for it to finish. Then it asks for your key.
 2. Press **F10**, open the **Mod Manager** at the top of the REDnode launcher and select **REDagent**. Under its permissions, switch **Allowed** on for "REDnode's tools for AI agents". (A new package is listed only in the Mod Manager until you press **Pin to launcher** there.) Without this, REDagent can still chat and read your mods' files, but it cannot see the Mod log, the game or overlay windows.
-3. Copy your API key. Click the key field in REDagent, press **Ctrl+V**, then **Save key**. The chat appears.
+3. Press **Set up the key**. REDnode's **Key request** window opens: copy your API key, click its box, press **Ctrl+V**, then **Allow**. The chat appears. If you already set an Anthropic key in REDnode's Settings, under Keys, or another EDGE tool did, REDagent only asks you to allow it.
 4. Ask something short, like "What's in my mod log?"
 
 ## How changes to your files work
@@ -90,7 +90,7 @@ Other mods can ask REDagent questions and show you the answers, for example a mo
 
 | What | Where it goes |
 |---|---|
-| Your API key | Stored encrypted with your Windows account, by REDnode. It is only used to talk to Anthropic and is never shown again. **Key** in the chat's footer replaces it |
+| Your API key | One of the keys every EDGE tool on your PC shares, kept encrypted for your Windows user by REDnode. REDagent uses it only to talk to Anthropic, and it is never shown again. Change or remove it in REDnode's Settings, under **Keys** |
 | Your questions and REDagent's answers | Sent to Anthropic's API, as with any Claude API use |
 | What REDagent reads to answer | Also sent to Anthropic: mod logs, values from the game, pictures of overlay windows and of the game's screen, and the files it reads from the apps folders |
 | Everything else | Stays on your PC. REDagent does not send telemetry |
@@ -114,7 +114,7 @@ In our first test, six questions (five on Opus 5.5, one on Sonnet 5.5) cost $0.3
 |---|---|
 | "REDnode's tools are off" | F10, **Mod Manager**, select REDagent, and switch **Allowed** on for "REDnode's tools for AI agents" |
 | **Get the Agent SDK** fails | Check your connection and press it again. A partial or mismatched download is thrown away, never used |
-| "That does not look like an Anthropic API key" | Copy the whole key. Anthropic keys start with `sk-ant-` |
+| "Anthropic keys start with sk-ant-" | Copy the whole key. Anthropic keys start with `sk-ant-` |
 | An error about your key or credit | Check the key and your credit at console.anthropic.com, then press **Key** and save the key again |
 | REDagent asks for your key again | The saved key could not be read, for example after a Windows account change. Paste it again |
 | The window is gone | F10, **Mod Manager**: check REDagent is switched on, and press **Show** if its window was closed. **Pin to launcher** keeps it one press away |

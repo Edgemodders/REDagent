@@ -125,6 +125,8 @@ function show() {
   $('sdk-get').toggleAttribute('disabled', state.sdk === 'getting');
   $('sdk-get').textContent = state.sdk === 'getting' ? 'Getting...' : 'Get the Agent SDK';
   $('cancel-key').hidden = !state.hasKey;
+  $('key-waiting').hidden = !state.asking;
+  $('ask-key').toggleAttribute('disabled', !!state.asking);
   $('send').hidden = state.busy;
   $('stop').hidden = !state.busy;
   for (const b of document.querySelectorAll('[data-model]')) {
@@ -349,14 +351,9 @@ $('sdk-get').addEventListener('click', () => {
   $('sdk-progress').classList.remove('error');
   channel.post({ type: 'sdk-get' });
 });
-$('save-key').addEventListener('click', () => {
-  const field = $('key');
-  const key = (field.value ?? '').trim();
-  field.setAttribute('value', '');
-  field.value = '';
-  if (!key) return;
+$('ask-key').addEventListener('click', () => {
   editingKey = false;
-  channel.post({ type: 'set-key', key });
+  channel.post({ type: 'ask-key' });
 });
 
 // ---------- messages from the agent ----------

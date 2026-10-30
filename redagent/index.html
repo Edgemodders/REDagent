@@ -110,9 +110,9 @@
 
     <div class="setup" id="setup" hidden>
       <p>REDagent answers questions about your REDnode mods and the game while you play. It uses Claude with <b>your own Anthropic API key</b>, and you pay Anthropic for what you use.</p>
-      <p class="fine">Get a key at console.anthropic.com, under API keys. It is stored encrypted on this PC, used only to talk to Anthropic, and never shown again.</p>
-      <rn-input id="key" label="Anthropic API key" type="password" placeholder="sk-ant-..."></rn-input>
-      <div class="row"><rn-button id="save-key">Save key</rn-button><rn-button id="cancel-key" variant="ghost" hidden>Cancel</rn-button></div>
+      <p class="fine">Get a key at console.anthropic.com, under API keys. REDnode keeps it encrypted for your Windows user and shares it with every EDGE tool on this PC; REDagent uses it only to talk to Anthropic. Change or remove it in REDnode's Settings, under Keys.</p>
+      <p class="fine" id="key-waiting" hidden>Waiting for your answer in REDnode's Key request window. Press F10 to use the mouse there.</p>
+      <div class="row"><rn-button id="ask-key">Set up the key</rn-button><rn-button id="cancel-key" variant="ghost" hidden>Cancel</rn-button></div>
     </div>
 
     <div class="chat" id="chat" hidden>

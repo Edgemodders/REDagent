@@ -131,7 +131,7 @@ Game types are looked up on demand with `gameapi_lookup`, not carried in the pro
 | The package | `redagent/`: `rednode-app.json` (an app and a Node mod, its own process, asks for `mcp`), `agent.mjs` (the agent), `index.html` and `chat.js` (the chat window), `briefing.md` (the hand-written briefing) |
 | The briefing | `briefing.md`, then the apps folders on this PC, then REDnode's Overlay apps guide, copied by `tools/build.mjs` into `redagent/briefing/` |
 | The chat | Streams Claude's text as it comes, shows each tool call, asks before `api_call` and before opening, closing or restarting a package, counts what the chat costs, and lets the player pick Opus 5.5 or Sonnet 5.5 and start a new chat |
-| The key | Pasted once (Ctrl+V works in overlay windows), kept in REDnode's encrypted secrets, approved only in REDagent's own Claude Code config folder in its data folder |
+| The key | The player's shared Anthropic key (REDnode 0.48.0, `keys:anthropic`, `secrets.shared` and `secrets.askShared`): pasted once in REDnode's own Key request window (Ctrl+V works in overlay windows), kept in the store every EDGE tool reads, approved only in REDagent's own Claude Code config folder in its data folder. REDagent 0.3's own copy is offered to the store at the first question, then deleted |
 | From REDnode | `pkg`, `secrets`, `kernel.mcp()` with a launcher grant, `channel` between the window and the agent, several apps folders, Ctrl shortcuts in overlay windows |
 | Deploy | `tools/deploy.ps1`, after REDnode's own deploy |
 

@@ -3,7 +3,7 @@
 // (index.html) over the package channel.
 //
 // Safety, see docs/design.md:
-//   - the player's own API key, from REDnode's encrypted secrets, approved only in
+//   - the player's own API key, from the shared keys every EDGE tool reads (REDnode #23), approved only in
 //     REDagent's own Claude Code config folder: never the player's Claude Code login;
 //   - files: read and written only inside the apps folders, never REDagent itself
 //     or node_modules (a PreToolUse hook, which runs before anything else);
@@ -58,7 +58,36 @@ function getSdk() {
   status();
 }
 
+// The key: the player's shared Anthropic key (REDnode 0.48.0, "keys:anthropic"), asked for in
+// REDnode's own Key request window. REDagent 0.3 kept its own copy under KEY: it is offered to
+// the shared store at the first question, then deleted; kept and used when the player declines.
 const KEY = 'anthropic-api-key';
+let moveDeclined = false; // this session: the player kept REDagent's own key
+let asking = false; // REDnode's Key request window is open for REDagent
+
+async function anthropicKey(ask) {
+  const shared = await secrets.shared('anthropic');
+  if (shared) return shared;
+  const mine = await secrets.get(KEY);
+  if (!ask || (mine && moveDeclined)) return mine;
+  asking = true;
+  await status();
+  try {
+    const key = await secrets.askShared('anthropic', {
+      reason: 'REDagent calls Claude with your own Anthropic API key; you pay Anthropic for what you use',
+      offer: mine ?? undefined,
+    });
+    if (key && mine) {
+      await secrets.delete(KEY);
+      console.log('API key moved to the shared keys');
+    }
+    if (!key && mine) moveDeclined = true;
+    return key ?? mine;
+  } finally {
+    asking = false;
+    await status();
+  }
+}
 const MODELS = [
   { id: 'claude-opus-5-5', name: 'Opus 5.5' },
   { id: 'claude-sonnet-5-5', name: 'Sonnet 5.5' },
@@ -259,7 +288,8 @@ async function status() {
   post({
     type: 'status',
     sdk: query ? 'ready' : sdkJob ? 'getting' : 'missing',
-    hasKey: !!(await secrets.get(KEY)),
+    hasKey: !!((await secrets.shared('anthropic')) || (await secrets.get(KEY))),
+    asking,
     model: settings.model,
     models: MODELS,
     cost: chatCost,
@@ -560,9 +590,9 @@ async function ask(text) {
     post({ type: 'error', text: 'Get the Claude Agent SDK first.' });
     return;
   }
-  const key = await secrets.get(KEY);
+  const key = await anthropicKey(true);
   if (!key) {
-    post({ type: 'error', text: 'Add your Anthropic API key first.' });
+    post({ type: 'error', text: "REDagent needs your Anthropic API key: press Set up the key, or set it in REDnode's Settings, Keys." });
     return;
   }
   approveKey(key);
@@ -671,21 +701,16 @@ channel.on(async (msg) => {
         await status();
         restore();
         break;
-      case 'set-key': {
-        const key = String(msg.key ?? '').trim();
-        if (!key.startsWith('sk-ant-')) {
-          post({ type: 'error', text: 'That does not look like an Anthropic API key. They start with sk-ant-.' });
-          break;
-        }
-        await secrets.set(KEY, key);
-        console.log('API key saved (encrypted)');
-        await status();
+      case 'ask-key':
+        // REDnode's Key request window takes the key; REDagent's page never holds it.
+        moveDeclined = false;
+        await anthropicKey(true);
         break;
-      }
       case 'sdk-get':
         getSdk();
         break;
       case 'clear-key':
+        // Only REDagent's own old copy: the shared key is changed in REDnode's Settings, Keys.
         await secrets.delete(KEY);
         await status();
         break;
@@ -824,8 +849,8 @@ let modQueue = Promise.resolve();
 
 async function answerMod(req, st) {
   if (!query) throw new Error('REDagent does not have the Claude Agent SDK yet. The player gets it in the REDagent window.');
-  const key = await secrets.get(KEY);
-  if (!key) throw new Error('REDagent has no API key yet. The player adds it in the REDagent window.');
+  const key = await anthropicKey(false);
+  if (!key) throw new Error('REDagent has no API key yet. The player sets it up in the REDagent window.');
   approveKey(key);
   ensureWorkDir();
   const mcpServers = {};

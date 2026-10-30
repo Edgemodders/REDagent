@@ -24,7 +24,7 @@ You ask, in a chat window in the game: "make me a mod that warns me when my heal
 1. Deploy [REDnode](https://github.com/Edgemodders/REDnode) to the game.
 2. `cd redagent && npm install`
 3. `.\tools\deploy.ps1 -GameDir '<your Cyberpunk 2077 folder>'`
-4. In the game, allow REDagent to use REDnode's tools in the REDnode Mod Manager, then paste your API key into REDagent.
+4. In the game, allow REDagent to use REDnode's tools in the REDnode Mod Manager, then press **Set up the key** in REDagent and paste your API key into REDnode's Key request window.
 
 `node tools/check-key.mjs` checks a key outside the game. `.\tools\brand\render.ps1` renders the banner, icon and badges.
 
