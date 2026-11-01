@@ -839,7 +839,8 @@ function postMods() {
 
 function modBriefing(from) {
   return `You are REDagent, powered by Claude, inside Cyberpunk 2077 with REDnode. The REDnode mod "${from.name}" (id ${from.id}) asks you a question for its player, and shows your answer in its own window.
-- Answer the question briefly and directly, in plain text or simple Markdown: a few sentences unless it needs more.
+- Answer the question briefly and directly, in plain text: a few sentences unless it needs more. No Markdown (no **, #, backticks or tables): the mod shows your words exactly as written.
+- Write only the answer, after any tool calls. Write nothing before or between tool calls: the mod's player sees every word you write.
 - You can only read: REDnode's logs, the game state, the game API (look a function up with gameapi_lookup, then read with api_read or api_get), TweakDB, overlay windows and the files in the apps folders. You cannot change files or the game, and you cannot ask the player anything.
 - Each tool call costs the player. Use tools only when the answer needs live data; context the mod sends comes with the question.
 - If the mod asks for something you cannot do, say so in one sentence.`;
@@ -872,6 +873,20 @@ async function answerMod(req, st) {
   const stop = new AbortController();
   req.signal.addEventListener('abort', () => stop.abort());
   console.log(`Question from ${req.from.name}: ${req.prompt.replace(/\s+/g, ' ').slice(0, 80)}`);
+  // Only the last turn's text is the answer. A turn that ends in a tool call may start with a
+  // note ("Need player ref."), so a turn's text is held back until it is long enough to be an
+  // answer or the turn ends without a tool call; a held note is dropped at its tool call.
+  const HOLD = 160;
+  let turn = ''; // this turn's text
+  let held = true; // this turn's text is not written to the mod yet
+  let wrote = false; // something has been written to the mod
+  const release = () => {
+    if (held && turn) {
+      req.write((wrote ? '\n\n' : '') + turn);
+      wrote = true;
+    }
+    held = false;
+  };
   let text = '';
   let cost = 0;
   for await (const m of query({
@@ -894,12 +909,24 @@ async function answerMod(req, st) {
       maxTurns: 8,
     },
   })) {
-    if (m.type === 'stream_event' && m.event.type === 'content_block_delta' && m.event.delta?.type === 'text_delta') {
-      text += m.event.delta.text;
-      req.write(m.event.delta.text);
+    if (m.type === 'stream_event') {
+      const e = m.event;
+      if (e.type === 'message_start') {
+        turn = '';
+        held = true;
+      } else if (e.type === 'content_block_start' && e.content_block?.type === 'tool_use') {
+        if (held) turn = ''; // a note before a tool call, never shown
+      } else if (e.type === 'content_block_delta' && e.delta?.type === 'text_delta') {
+        turn += e.delta.text;
+        if (!held) req.write(e.delta.text);
+        else if (turn.length >= HOLD) release();
+      } else if (e.type === 'message_delta' && e.delta?.stop_reason && e.delta.stop_reason !== 'tool_use') {
+        release();
+      }
     } else if (m.type === 'result') {
       cost = m.total_cost_usd ?? 0;
       if (m.is_error) throw new Error(String(m.result ?? m.subtype).replaceAll(key, '***'));
+      text = (turn.trim() || (typeof m.result === 'string' ? m.result : '')).trim();
     }
   }
   st.today += cost;

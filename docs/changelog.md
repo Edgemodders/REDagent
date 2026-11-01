@@ -10,6 +10,10 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+**Fixed**
+
+- Answers to other mods' questions (`agent.ask`, as in the Ask mod) held a note REDagent wrote before looking something up, run into the answer ("Need player ref.V has ..."), and Markdown marks such as `**` shown as they are. A mod now gets only the answer, in plain text.
+
 **Changed**
 
 - Your Anthropic API key is now one of the keys every EDGE tool shares (REDnode 0.48.0, https://github.com/Edgemodders/REDnode/issues/23): **Set up the key** opens REDnode's own Key request window, where you paste it once, and it is changed or removed in REDnode's Settings, under Keys. A key REDagent kept before is offered to the shared keys at your first question, then deleted; if you decline, REDagent keeps using its own copy.
