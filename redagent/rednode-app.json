@@ -8,7 +8,7 @@
   "main": "agent.mjs",
   "isolation": "process",
   "permissions": ["mcp", "keys:anthropic"],
-  "requires": { "rednode": ">=0.48.0" },
+  "requires": { "rednode": ">=0.50.2" },
   "provides": ["agent"],
   "kind": "window",
   "width": 520,
