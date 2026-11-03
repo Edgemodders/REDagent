@@ -7,7 +7,10 @@
 #                                               GitHub release with the zip; stops first if that
 #                                               tag exists (raise the version in redagent/package.json
 #                                               and redagent/rednode-app.json) or docs/changelog.md
-#                                               has no section for it (tools/notes.mjs)
+#                                               has no section for it (tools/notes.mjs), or
+#                                               README.md's status line and badge do not say
+#                                               that version released
+#                                               (tools/release/readme-check.mjs)
 #   ... and "Update Nexus Mods" ticked          also, after the GitHub release, uploads the zip to
 #                                               the Nexus page as the main file's new version (the
 #                                               old one archived), adds its changelog and pushes
@@ -87,6 +90,12 @@ jobs:
             exit 1
           }
           $global:LASTEXITCODE = 0
+
+      - name: The README says this release
+        if: inputs.release
+        run: |
+          $version = (Get-Content redagent/package.json -Raw | ConvertFrom-Json).version
+          node tools/release/readme-check.mjs --version $version
 
       - name: Release notes from docs/changelog.md
         if: inputs.release
