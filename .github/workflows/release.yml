@@ -14,14 +14,17 @@
 #   ... and "Update Nexus Mods" ticked          also, after the GitHub release, uploads the zip to
 #                                               the Nexus page as the main file's new version (the
 #                                               old one archived), adds its changelog and pushes
-#                                               nexus/description.bbcode (tools/nexus/nexus.mjs,
-#                                               the organization's NEXUS_KEY secret). It checks the
-#                                               page first and stops before building if the
-#                                               description changed on Nexus since the last pull
-#                                               (node tools/nexus/nexus.mjs pull, commit, run again).
-#                                               If the upload fails after the GitHub release, run
-#                                               tools/nexus/nexus.mjs release on the dev PC with the
-#                                               release's zip: it skips what is already done.
+#                                               nexus/description.bbcode (the Nexus tool, from
+#                                               EDGErepo at the tag v1; the organization's NEXUS_KEY
+#                                               secret). It checks the page first and stops before
+#                                               building if the description changed on Nexus since
+#                                               the last pull
+#                                               (node ../EDGErepo/tools/nexus/nexus.mjs pull, commit,
+#                                               run again). If the upload fails after the GitHub
+#                                               release, run
+#                                               node ../EDGErepo/tools/nexus/nexus.mjs release on the
+#                                               dev PC with the release's zip: it skips what is
+#                                               already done.
 #
 # The briefing is copied from REDnode's guide at the tag of the REDnode REDagent needs: the
 # version in redagent/rednode-app.json's "requires" (">=0.32.1" reads REDnode's v0.32.1).
@@ -103,13 +106,19 @@ jobs:
           node tools/notes.mjs --out "$env:RUNNER_TEMP/notes.md"
           node tools/notes.mjs --nexus --out "$env:RUNNER_TEMP/nexus-notes.txt"
 
+      # The Nexus tool, shared by the Edgemodders repos at this tag (REDnode's docs/edgerepo.md). Outside
+      # the workspace, so nothing packs it.
+      - name: The Nexus tool
+        if: inputs.release && inputs.nexus
+        run: git -c advice.detachedHead=false clone --quiet --depth 1 --branch v1 https://github.com/Edgemodders/EDGErepo "$env:RUNNER_TEMP/EDGErepo"
+
       - name: Nexus Mods can take this release
         if: inputs.release && inputs.nexus
         env:
           NEXUS_KEY: ${{ secrets.NEXUS_KEY }}
         run: |
           $version = (Get-Content redagent/package.json -Raw | ConvertFrom-Json).version
-          node tools/nexus/nexus.mjs check --version $version
+          node "$env:RUNNER_TEMP/EDGErepo/tools/nexus/nexus.mjs" check --version $version
 
       - name: Build the zip
         run: node tools/release-zip.mjs rednode-src
@@ -134,4 +143,4 @@ jobs:
           NEXUS_KEY: ${{ secrets.NEXUS_KEY }}
         run: |
           $version = (Get-Content redagent/package.json -Raw | ConvertFrom-Json).version
-          node tools/nexus/nexus.mjs release --version $version --zip "release/REDagent-$version.zip" --notes "$env:RUNNER_TEMP/nexus-notes.txt"
+          node "$env:RUNNER_TEMP/EDGErepo/tools/nexus/nexus.mjs" release --version $version --zip "release/REDagent-$version.zip" --notes "$env:RUNNER_TEMP/nexus-notes.txt"
