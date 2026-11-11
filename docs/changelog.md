@@ -10,6 +10,10 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+**New**
+
+- REDagent can make and change quickhacks with EDGEhack's tools (with REDnode 0.63.0 or later): find and describe the game's quickhacks, make a new one, change its costs, texts and effects, write its script, and try it live in the game, which puts it in V's backpack. Its quickhacks go on EDGEhack's Desk unless you give it a WolvenKit project. Every change asks you first.
+
 ## 0.4.1 (2026-11-01)
 
 **Fixed**
