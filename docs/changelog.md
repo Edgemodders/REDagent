@@ -10,6 +10,8 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+## 0.4.4 (2026-11-15)
+
 **Fixed**
 
 - **Set up the key** did nothing once a key was saved, so an old or wrong key could only be changed in REDnode's Settings, Keys. With a key saved it is now **Replace the key**: REDnode's Key request window takes a new key in its place. When Anthropic refuses the saved key, REDagent says so and shows the button. Needs REDnode 0.65.3 or later.
