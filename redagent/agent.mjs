@@ -64,10 +64,31 @@ function getSdk() {
 const KEY = 'anthropic-api-key';
 let moveDeclined = false; // this session: the player kept REDagent's own key
 let asking = false; // REDnode's Key request window is open for REDagent
+let keyRefused = false; // Anthropic refused the saved key in the last turn
 
-async function anthropicKey(ask) {
+// replace: ask for a new key even when one is saved (REDnode 0.65.2's askShared replace), for
+// the window's Replace the key and after Anthropic refused the saved one.
+async function anthropicKey(ask, replace = false) {
   const shared = await secrets.shared('anthropic');
-  if (shared) return shared;
+  if (shared && !(ask && replace)) return shared;
+  if (shared) {
+    asking = true;
+    await status();
+    try {
+      const key = await secrets.askShared('anthropic', {
+        reason: 'A new Anthropic API key for REDagent, to replace the saved one',
+        replace: true,
+      });
+      if (key && key !== shared) {
+        keyRefused = false;
+        console.log('API key replaced');
+      }
+      return key ?? shared;
+    } finally {
+      asking = false;
+      await status();
+    }
+  }
   const mine = await secrets.get(KEY);
   if (!ask || (mine && moveDeclined)) return mine;
   asking = true;
@@ -290,6 +311,7 @@ async function status() {
     sdk: query ? 'ready' : sdkJob ? 'getting' : 'missing',
     hasKey: !!((await secrets.shared('anthropic')) || (await secrets.get(KEY))),
     asking,
+    keyRefused,
     model: settings.model,
     models: MODELS,
     cost: chatCost,
@@ -671,7 +693,14 @@ async function ask(text) {
         const total = m.total_cost_usd ?? chatCost;
         const cost = Math.max(0, total - chatCost);
         chatCost = Math.max(chatCost, total);
-        post({ type: 'turn-end', error: m.is_error ? String(m.result ?? m.subtype) : null, cost, chatCost });
+        let error = m.is_error ? String(m.result ?? m.subtype) : null;
+        // Claude Code's answer to a refused key: "Invalid API key · Fix external API key".
+        if (error && /invalid api key|authentication_error|invalid x-api-key/i.test(error)) {
+          keyRefused = true;
+          error = 'Anthropic refused your API key: it may be old, revoked or mistyped. Press Replace the key and paste a new one from console.anthropic.com.';
+          status();
+        }
+        post({ type: 'turn-end', error, cost, chatCost });
         // Prompt caching is automatic (Claude Code marks the system prompt and the latest
         // messages); these figures show it working: most input should be read from cache.
         const u = m.usage ?? {};
@@ -704,7 +733,7 @@ channel.on(async (msg) => {
       case 'ask-key':
         // REDnode's Key request window takes the key; REDagent's page never holds it.
         moveDeclined = false;
-        await anthropicKey(true);
+        await anthropicKey(true, msg.replace === true);
         break;
       case 'sdk-get':
         getSdk();

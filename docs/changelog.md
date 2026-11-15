@@ -10,6 +10,10 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+**Fixed**
+
+- **Set up the key** did nothing once a key was saved, so an old or wrong key could only be changed in REDnode's Settings, Keys. With a key saved it is now **Replace the key**: REDnode's Key request window takes a new key in its place. When Anthropic refuses the saved key, REDagent says so and shows the button. Needs REDnode 0.65.3 or later.
+
 **New**
 
 - REDagent can make and change quickhacks with EDGEhack's tools (with REDnode 0.63.0 or later): find and describe the game's quickhacks, make a new one, change its costs, texts and effects, write its script, and try it live in the game, which puts it in V's backpack. Its quickhacks go on EDGEhack's Desk unless you give it a WolvenKit project. Every change asks you first, once for all the changes you asked for in one go.

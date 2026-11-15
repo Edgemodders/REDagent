@@ -118,7 +118,7 @@ function setWorking(on) {
 function show() {
   // First the Agent SDK, then the key, then the chat.
   const needSdk = !!state.sdk && state.sdk !== 'ready';
-  const needKey = !needSdk && (!state.hasKey || editingKey);
+  const needKey = !needSdk && (!state.hasKey || editingKey || !!state.keyRefused);
   $('sdk-setup').hidden = !needSdk;
   $('setup').hidden = !needKey;
   $('chat').hidden = needSdk || needKey;
@@ -127,6 +127,8 @@ function show() {
   $('cancel-key').hidden = !state.hasKey;
   $('key-waiting').hidden = !state.asking;
   $('ask-key').toggleAttribute('disabled', !!state.asking);
+  $('ask-key').textContent = state.hasKey ? 'Replace the key' : 'Set up the key';
+  $('key-refused').hidden = !state.keyRefused;
   $('send').hidden = state.busy;
   $('stop').hidden = !state.busy;
   for (const b of document.querySelectorAll('[data-model]')) {
@@ -343,6 +345,7 @@ $('key-button').addEventListener('click', () => {
 });
 $('cancel-key').addEventListener('click', () => {
   editingKey = false;
+  state.keyRefused = false;
   show();
 });
 $('sdk-get').addEventListener('click', () => {
@@ -353,7 +356,8 @@ $('sdk-get').addEventListener('click', () => {
 });
 $('ask-key').addEventListener('click', () => {
   editingKey = false;
-  channel.post({ type: 'ask-key' });
+  // With a key saved, REDnode's Key request window takes a new one in its place.
+  channel.post({ type: 'ask-key', replace: !!state.hasKey });
 });
 
 // ---------- messages from the agent ----------
