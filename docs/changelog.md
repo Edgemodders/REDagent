@@ -1,16 +1,23 @@
 # Changelog
 
-What changed in each REDagent release, for players. Each release takes its notes from its section here: the GitHub release and the version's changelog on the Nexus Mods page.
+What changed in each REDagent release, for players. Each release takes its notes from its section here: the GitHub release, and the version's changelog on the Nexus Mods page (the section's short Nexus summary).
 
 How to keep it (the Edgemodders convention):
 
 - With each change a player would notice, add a line under **Unreleased**, in its group: **New**, **Changed**, **Fixed** or **Other**. One change per line.
 - Before a release, rename **Unreleased** to `## <version> (<date>)` and start a new empty **Unreleased** above it.
-- Links are full URLs, since the same text goes to GitHub and Nexus.
+- With the rename, write the section's **Nexus summary** under its heading: an HTML comment that starts `<!-- nexus` and ends `-->`, with one short plain line per change a player would notice, each starting `New:`, `Changed:`, `Fixed:`, `Other:` or `Needs:`, at most 120 characters and 12 lines, no markdown. Nexus shows each line as one entry in a small text field. The comment hides it on GitHub and the docs site; the release workflow posts it with a "Full changelog" link and stops if it is missing or too long. Nexus cannot edit a changelog once posted.
+- Links are full URLs, since the same text goes to GitHub.
 
 ## Unreleased
 
 ## 0.4.4 (2026-11-15)
+
+<!-- nexus
+Needs: REDnode 0.65.3 or later
+New: REDagent makes and changes quickhacks with EDGEhack's tools, and tries them live in the game
+Fixed: Set up the key did nothing once a key was saved; it is now Replace the key
+-->
 
 **Fixed**
 
