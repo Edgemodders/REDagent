@@ -21,7 +21,7 @@ As of 2026-10-25. **REDagent 0.3.2 was released on 2026-10-25** on [GitHub](http
 | C4 Polish | Done, passed in game 2026-10-13. Chats kept on disk and listed, with Undo after a restart; the game's screen through REDnode's `game_image`, with or without the overlay; a waiting line while a card needs you; the Test timer app. HDR capture has unit tests only, not yet seen in game |
 | C5 Agent API for mods | Done, passed in game 2026-10-13. Mods ask with `agent.ask` in the `rednode` package once the player allows their `agent` permission; REDagent answers one at a time on Sonnet 5.5 with read-only tools, within a daily limit per mod ($0.25 by default), shown and changed in its Mods view |
 | 0.3.1 Mods' tools | Done, passed in game 2026-10-24 with REDnode 0.36.0. REDagent uses the tools other mods offer: those marked read-only run without asking, the rest ask you first |
-| C6 REDagent in REDcode | Not started. The agent as a core package with two front ends, the in-game chat and a view in REDcode, with edits reviewed in VS Code's diff editor and REDbridge's WolvenKit operations as tools |
+| C6 REDagent in REDcode | Agreed to go ahead on 2026-11-23; a plan with three options awaits the owner ([design, "C6 plan"](design.html#c6-plan-redagent-and-the-editor)): recommended, a handoff from REDagent to Claude Code with EDGEchat rather than a second chat in the editor. As first designed: The agent as a core package with two front ends, the in-game chat and a view in REDcode, with edits reviewed in VS Code's diff editor and REDbridge's WolvenKit operations as tools |
 
 Next: C6. See the [changelog](changelog.html).
 
