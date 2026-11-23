@@ -10,7 +10,7 @@
 //   - every change to a file is shown to the player as a diff and backed up first,
 //     with Undo; calls that may change the game ask the player first.
 
-import { agent, channel, kernel, pkg, secrets } from 'rednode';
+import { agent, channel, kernel, pkg, secrets, ui } from 'rednode';
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { diffLines } from './diff.mjs';
@@ -279,6 +279,114 @@ function record(msg) {
     default:
       break;
   }
+}
+
+// ---------- Continue in VS Code (C6a): a handoff for Claude Code with EDGEchat ----------
+//
+// The chat written as a Markdown file in handoffs/ in REDagent's data folder, which
+// EDGEchat's /edge:continue reads: what the player asked, what REDagent answered and
+// did, the files it changed, and where the apps folders are. No key, token or cost
+// detail beyond the chat's total goes in it.
+
+const HANDOFFS = join(pkg.dataDir, 'handoffs');
+const HANDOFF_FORMAT = 1;
+const MAX_TEXT = 4000; // one answer or question, in characters
+
+function version() {
+  try {
+    return JSON.parse(readFileSync(join(pkg.dir, 'rednode-app.json'), 'utf8')).version ?? '?';
+  } catch {
+    return '?';
+  }
+}
+
+const clip = (text) => {
+  const t = String(text ?? '').trim();
+  return t.length > MAX_TEXT ? `${t.slice(0, MAX_TEXT)} [... cut, ${t.length - MAX_TEXT} more characters]` : t;
+};
+
+// The package a changed file belongs to: the folder under an apps folder, with its manifest's id.
+function packageOf(file) {
+  for (const d of APPS_DIRS) {
+    const rel = relative(d, file);
+    if (rel.startsWith('..') || isAbsolute(rel)) continue;
+    const top = rel.split(/[\\/]/)[0];
+    const dir = join(d, top);
+    try {
+      const m = JSON.parse(readFileSync(join(dir, 'rednode-app.json'), 'utf8'));
+      return { id: m.id ?? top, name: m.name ?? top, dir };
+    } catch {
+      return { id: top, name: top, dir };
+    }
+  }
+  return null;
+}
+
+function writeHandoff() {
+  if (!chat.events.some((e) => e.type === 'user')) throw new Error('Ask something first: there is nothing to hand over yet.');
+  saveChat();
+  const at = new Date();
+  const changed = [...edits.values()].sort((a, b) => a.id - b.id);
+  const packages = new Map();
+  for (const e of changed) {
+    const p = packageOf(e.file);
+    if (p) packages.set(p.id, p);
+  }
+  const out = [
+    `# REDagent handoff: ${chat.title || 'Untitled'}`,
+    '',
+    `<!-- redagent-handoff ${JSON.stringify({ format: HANDOFF_FORMAT, chat: chat.id, title: chat.title, at: at.toISOString(), redagent: version(), model: settings.model })} -->`,
+    '',
+    `Handed over from REDagent ${version()} in Cyberpunk 2077 on ${at.toLocaleString('sv')}. Model ${settings.model}; the chat has cost $${chatCost.toFixed(3)} so far.`,
+    '',
+    'This is a chat the player had with REDagent, the assistant inside the game, for REDnode mods. Carry on from it here in the editor:',
+    '',
+    "1. Read the files listed below before changing them: the player may have changed them since, or undone REDagent's changes.",
+    "2. Check the mods' state and their errors with REDnode's tools (`apps`, `logs`) while the game runs.",
+    '3. Go on with what the player last asked, unless they now ask for something else.',
+    "4. A Node mod restarts by itself when its files change (hot reload). Ask the player before anything that changes the game.",
+    '',
+    '## Where things are',
+    '',
+    ...APPS_DIRS.map((d, i) => `- ${i === 0 ? 'Apps folder' : 'Also an apps folder'}: \`${d}\``),
+    '',
+    '## Mods involved',
+    '',
+    ...(packages.size ? [...packages.values()].map((p) => `- ${p.name} (id \`${p.id}\`): \`${p.dir}\``) : ['- None changed by REDagent in this chat.']),
+    '',
+    '## Files REDagent changed',
+    '',
+    ...(changed.length
+      ? changed.map((e) => `- \`${e.file}\`: ${e.undone ? 'changed, then undone by the player' : e.created ? 'new' : 'changed'}`)
+      : ['- None.']),
+    '',
+    '## The chat',
+    '',
+  ];
+  for (const e of chat.events) {
+    if (e.type === 'user') out.push(`**Player:** ${clip(e.text)}`, '');
+    else if (e.type === 'text' && e.text.trim()) out.push(`**REDagent:** ${clip(e.text)}`, '');
+    else if (e.type === 'tool') out.push(`- Tool \`${e.name}\`${e.input ? `: ${clip(e.input)}` : ''}${e.error ? ' (failed)' : ''}`, '');
+    else if (e.type === 'change') out.push(`- Asked to change \`${e.file}\`: ${e.answer ?? 'not answered'}`, '');
+    else if (e.type === 'confirm') out.push(`- Asked the player: ${clip(e.text ?? e.title ?? '')} (${e.answer ?? 'not answered'})`, '');
+    else if (e.type === 'notice' || e.type === 'error') out.push(`- ${e.type === 'error' ? 'Error' : 'Note'}: ${clip(e.text)}`, '');
+    else if (e.type === 'turn-end' && e.error) out.push(`- The turn ended: ${clip(e.error)}`, '');
+  }
+  mkdirSync(HANDOFFS, { recursive: true });
+  const file = join(HANDOFFS, `${chat.id}.md`);
+  writeFileSync(file, out.join('\n'));
+  return file;
+}
+
+async function handOver() {
+  const file = writeHandoff();
+  let copied = true;
+  await ui.copy('/edge:continue').catch(() => (copied = false));
+  post({
+    type: 'notice',
+    text: `Handed over to VS Code. In Claude Code with EDGEchat, type /edge:continue${copied ? ' (copied: paste it)' : ''} to carry on from this chat. The handoff is ${file}`,
+  });
+  console.log(`Handed over "${chat.title}" to ${file}`);
 }
 
 // The player's answer to a card, so a replayed card shows it instead of buttons.
@@ -781,6 +889,10 @@ channel.on(async (msg) => {
         break;
       case 'history':
         channel.post({ type: 'history', current: chat.id, chats: listChats() });
+        break;
+      case 'handoff':
+        if (running) post({ type: 'notice', text: 'Hand over once this answer is finished, or press Stop.' });
+        else await handOver();
         break;
       case 'mods':
         postMods();

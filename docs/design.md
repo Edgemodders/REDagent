@@ -417,3 +417,43 @@ The other way, a note from Claude Code into REDagent's chat in the game, is left
 | Where the shared knowledge lives (C6b) | EDGEchat's skill, since it is the larger and changes more often; REDagent copies it at build time |
 
 What it needs from other repos goes to them as `request` issues once agreed: EDGEchat (the command, the skill as the source), REDcode (the list in its REDnode view).
+
+**The owner chose B on 2026-11-23** ("B, go ahead with C6a").
+
+### C6a: build
+
+Built in REDagent 0.4.5 on 2026-11-23.
+
+| Part | Where | What |
+|---|---|---|
+| The button | `index.html`, `chat.js` | **VS Code** in the footer, with a tooltip; sends `handoff` on the channel |
+| The handoff | `agent.mjs`, `writeHandoff`, `handOver` | Refused in words while a turn runs or before anything was asked. Writes `handoffs/<chat id>.md` in REDagent's data folder (`%APPDATA%\@rednode\overlay\packages\redagent`), puts `/edge:continue` on the clipboard (`ui.copy`) and says where the file is |
+
+**The handoff file (format 1)**, Markdown, for Claude Code to read:
+
+| Part | What |
+|---|---|
+| Title | `# REDagent handoff: <chat title>` |
+| Comment line | `<!-- redagent-handoff {"format":1,"chat":"<id>","title":"...","at":"<ISO time>","redagent":"<version>","model":"..."} -->`, for a tool to read without parsing the rest |
+| Instructions | Read the files before changing them, check the mods with REDnode's `apps` and `logs`, go on with the last request, ask before changing the game |
+| Where things are | The apps folders |
+| Mods involved | Each changed file's package: name, id and folder from its manifest |
+| Files REDagent changed | Full paths: new, changed, or changed then undone |
+| The chat | The player's questions, REDagent's answers, tool calls (failed ones marked), change cards and questions with their answers, notes and errors; each text cut at 4,000 characters |
+
+It holds no key, token or Claude Code session id. EDGEchat's `/edge:continue` reads the newest file in that folder (or one it names): requested as an EDGEchat issue.
+
+Check: scratchpad `c6a/check.mjs` (15, plain Node with a stand-in `rednode`: the file and its comment line, the mod from its manifest, changed and undone files, the chat's turns, tool calls, cards, errors, a long question cut, no session id, the clipboard, the notice, an empty chat refused).
+
+### C6a test
+
+Needs EDGEchat's `/edge:continue`. With the game running and REDagent 0.4.5:
+
+| Step | Do | Expect |
+|---|---|---|
+| 1 | In REDagent, ask: "Make a small mod that shows V's money in a window." Allow its changes | The mod's window shows |
+| 2 | Press **VS Code** | A note in the chat: handed over, `/edge:continue` copied, and the file's path |
+| 3 | In VS Code, in Claude Code with EDGEchat, paste `/edge:continue` and send it | Claude says which chat it picked up, the mod and its files |
+| 4 | Ask Claude Code: "Make the money text red" | It changes the mod's files; the window in the game turns red after hot reload |
+| 5 | Open the handoff file | No key in it |
+

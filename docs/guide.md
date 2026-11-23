@@ -74,6 +74,12 @@ Each chat is saved as it goes, with its changes, so closing the game does not lo
 
 Chats are kept in `%APPDATA%\@rednode\overlay\packages\redagent\chats`.
 
+## Continue in VS Code
+
+To carry a chat on at your desk, press **VS Code** at the bottom of the window. REDagent writes the chat as a handoff file and copies `/edge:continue`. In VS Code, open Claude Code with the [EDGEchat](https://github.com/Edgemodders/EDGEchat) plugin, paste `/edge:continue` and send it: Claude reads the handoff (what you asked, what REDagent did, the files it changed) and carries on from there, with the same EDGE tools.
+
+Handoffs are kept in `%APPDATA%\@rednode\overlay\packages\redagent\handoffs`, one file per chat, written again each time you press the button. They hold no key.
+
 ## Mods that ask REDagent
 
 Other mods can ask REDagent questions and show you the answers, for example a mod that suggests a build or explains an error. A mod can ask only once you allow its "questions to the AI assistant" permission in the REDnode Mod Manager.

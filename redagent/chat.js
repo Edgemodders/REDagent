@@ -151,6 +151,10 @@ function send() {
 $('send').addEventListener('click', send);
 $('prompt').addEventListener('submit', send);
 $('stop').addEventListener('click', () => channel.post({ type: 'stop' }));
+$('handoff').addEventListener('click', () => {
+  showHistory(null);
+  channel.post({ type: 'handoff' });
+});
 $('new').addEventListener('click', () => {
   if (state.busy) return;
   clearChat();

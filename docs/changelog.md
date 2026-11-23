@@ -11,6 +11,10 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+### New
+
+- **Continue in VS Code**: the chat's **VS Code** button writes the chat as a handoff file, puts `/edge:continue` on the clipboard, and says where the file is. In Claude Code with EDGEchat, `/edge:continue` picks the chat up in the editor (EDGEchat's part: https://github.com/Edgemodders/EDGEchat). The handoff holds what you asked, REDagent's answers and tool calls, the files it changed and the mods involved; never your key.
+
 ## 0.4.4 (2026-11-15)
 
 <!-- nexus
