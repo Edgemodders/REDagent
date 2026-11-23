@@ -363,3 +363,57 @@ Each phase ends with an in-game test, as in REDnode.
 | **C4 Polish** | Chat history kept on disk and a list of earlier chats; a capture of the game's frame (native, REDnode's `game_image`); what the tests teach (the Test timer app, a "waiting for you" line). Prompt caching turned out to be automatic (C2) | A chat survives a restart of the game; REDagent describes the game's screen |
 | **C5 Agent API for mods** | A `rednode` API for other mods to use REDagent, brokered by the host: for example `agent.ask(prompt, { context })`, streaming the answer back. A mod must ask for the `agent` permission, the player grants it in the launcher, and spending limits apply per mod, since every call costs the player | A sample mod asks REDagent a question and shows the answer; a mod without the permission is refused |
 | **C6 REDagent in REDcode** | REDagent's agent split into a core package shared by two front ends: the in-game chat, and a REDagent view in REDcode's activity bar, beside REDnode's views. In the editor, edits show in VS Code's diff editor. The same briefing, kernel tools and settings. REDbridge's WolvenKit editing operations, exposed as MCP tools by REDbridge (being added in the REDcode session), give the same agent archive and asset work | From REDcode: "make a mod that ..." produces a working mod in the running game, with edits reviewed in VS Code |
+
+## C6 plan: REDagent and the editor
+
+The owner agreed on 2026-11-23 to go ahead with C6 (EDGE dashboard item RA1). This plan is for the owner to agree before any build: C6 was designed on 2026-10-12, and since then EDGEchat has shipped.
+
+### What is there now
+
+| | REDagent | EDGEchat |
+|---|---|---|
+| Where | In the game: an overlay chat window and a Node mod | In the editor: a plugin for Claude Code (VS Code, EDGEkit, the terminal) |
+| Who pays | The player's own Anthropic API key | Whatever Claude Code is signed in with: a Claude plan or an API key |
+| Tools | REDnode's kernel tools, other mods' tools, EDGEmat's and EDGEhack's | The REDnode, REDcode (REDbridge), EDGEdeck and EDGEmat servers |
+| Knowledge | REDagent's briefing (`redagent/briefing.md`, `briefing/overlay-apps.md`) | Skills: `rednode-mods`, `wolvenkit-projects`, `archives-and-cr2w`, `edge-tools`, and commands such as `/edge:new-mod` |
+| Changes | A card per change with Allow and Deny, a backup of every file, Undo | Claude Code's own diffs and permission prompts |
+| Chats | Kept on disk in REDagent's data folder, listed in its window | Claude Code's sessions |
+
+C6 as designed would give the editor a second chat that does most of what Claude Code with EDGEchat already does there. It would mean the Agent SDK (282 MB, with `claude.exe`) inside REDcode, a chat view, and the agent split out of the REDnode package: about two to three weeks.
+
+### What a REDagent view in REDcode would add beside EDGEchat
+
+| Gain | Weight |
+|---|---|
+| One chat across the game and the desk: start a mod in the game, carry on in the editor with the same history | Real, and EDGEchat cannot do it |
+| No Claude Code install | Small: REDcode users are in VS Code, where Claude Code is one install, and it takes an API key too |
+| REDagent's cards, backups and Undo in the editor | Small: Claude Code shows diffs and asks before edits |
+| The same knowledge in both places | Real, but it does not need a second chat: the briefing and the skills can share one source |
+
+### Options
+
+| Option | What | Size |
+|---|---|---|
+| **A. As designed** | The core split and a REDagent chat view in REDcode, edits in VS Code's diff editor | Two to three weeks, plus the Agent SDK's size in REDcode |
+| **B. REDagent hands over to EDGEchat (recommended)** | Keep one chat per place (REDagent in the game, Claude Code with EDGEchat in the editor) and join them: a handoff that carries a REDagent chat into Claude Code, and one source of knowledge for both | A few days, across REDagent, EDGEchat and REDcode |
+| **C. Drop C6** | Point editor users to EDGEchat; REDagent stays in the game | None |
+
+### B in phases
+
+| Phase | Builds | The test proves |
+|---|---|---|
+| **C6a Continue in VS Code** | A **Continue in VS Code** button in REDagent's chat. It writes a handoff file beside the chat in REDagent's data folder: what the player asked, what REDagent did, the files it changed with their paths, the mods involved and their state, and any error in the Mod log. An EDGEchat command, `/edge:continue`, reads the newest handoff (or one it names) and goes on from it with Claude Code's tools. The handoff holds no key or token | A mod started with REDagent in the game is finished from VS Code with Claude Code and EDGEchat, and runs in the game |
+| **C6b One source of knowledge** | REDagent's briefing and EDGEchat's `rednode-mods` skill drawn from one text, kept in one repo and copied into the other by a script, with a check that stops a release when they differ | A fact added once shows in both assistants |
+| **C6c REDagent's chats in REDcode** | REDcode lists REDagent's chats (read only, from its data folder) in its REDnode view; each opens Claude Code with that chat's handoff. Whether another extension can open Claude Code's VS Code extension with a prompt is unverified: a short check first, and without it C6c is a copy button | From REDcode, a click on a REDagent chat opens it in Claude Code |
+
+The other way, a note from Claude Code into REDagent's chat in the game, is left out for now: Claude Code reaches the game through REDnode's tools already.
+
+### For the owner to decide
+
+| Question | Recommended |
+|---|---|
+| A, B or C | B |
+| C6c, or the EDGEchat command alone | Both, C6c after C6a's test |
+| Where the shared knowledge lives (C6b) | EDGEchat's skill, since it is the larger and changes more often; REDagent copies it at build time |
+
+What it needs from other repos goes to them as `request` issues once agreed: EDGEchat (the command, the skill as the source), REDcode (the list in its REDnode view).
