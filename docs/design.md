@@ -457,3 +457,5 @@ Needs EDGEchat's `/edge:continue`. With the game running and REDagent 0.4.5:
 | 4 | Ask Claude Code: "Make the money text red" | It changes the mod's files; the window in the game turns red after hot reload |
 | 5 | Open the handoff file | No key in it |
 
+**Passed in game on 2026-11-25** (dev PC, REDagent 0.4.6, REDnode 0.73.1, Claude Code with EDGEchat 0.2.0 from its repo, `claude --plugin-dir`): every step, with EDGEchat's sixth (`/edge:continue` with no handoff folder says to press **VS Code** first). The handoff (3.5 KB) has no key in it. C6a is done.
+
