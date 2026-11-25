@@ -13,7 +13,12 @@ How to keep it (the Edgemodders convention):
 
 ### New
 
+- **Mods choose how REDagent answers** (REDnode #54: https://github.com/Edgemodders/REDnode/issues/54, with REDnode 0.72.0): a mod's `agent.ask` can say `tools: false`, so REDagent answers from the question and context alone, quicker and cheaper, and `model`: `"sonnet"` (the default), `"opus"` or `"haiku"`, each the newest model of its family; another name is refused. The Mods view shows a question's model and "no tools" beside its cost.
 - **Continue in VS Code**: the chat's **VS Code** button writes the chat as a handoff file, puts `/edge:continue` on the clipboard, and says where the file is. In Claude Code with EDGEchat, `/edge:continue` picks the chat up in the editor (EDGEchat's part: https://github.com/Edgemodders/EDGEchat). The handoff holds what you asked, REDagent's answers and tool calls, the files it changed and the mods involved; never your key.
+
+### Changed
+
+- **A mod's context is sent whole**, up to 65,536 characters of JSON (REDnode refuses more), where REDagent cut it at 8,000 characters before.
 
 ## 0.4.4 (2026-11-15)
 

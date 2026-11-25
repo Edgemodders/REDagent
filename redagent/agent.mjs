@@ -943,13 +943,25 @@ if (latest) {
 //
 // Mods that ask for the "agent" permission, once the player allows it, ask with
 // agent.ask in the rednode package; the host passes their questions here. They are
-// answered one at a time, apart from the player's chat, on Sonnet 5.5, with
-// read-only tools: never files written or the game changed. Pictures (window and
+// answered one at a time, apart from the player's chat, on Sonnet 5.5 unless the mod
+// names another family (REDnode #54), with read-only tools (none when the mod asks
+// with tools: false): never files written or the game changed. Pictures (window and
 // game screen) are off unless the player switches them on for that mod. Each mod
 // has a daily spending limit, $0.25 unless the player sets another, and can be
 // paused, in the Mods view.
 
-const MOD_MODEL = 'claude-sonnet-5-5';
+// #54: a mod names a model family, never an id; each maps to the newest model of it.
+const MOD_MODELS = { sonnet: 'claude-sonnet-5-5', opus: 'claude-opus-5-5', haiku: 'claude-haiku-5-5' };
+const MOD_MODEL = MOD_MODELS.sonnet;
+// The most context a mod's question carries, as JSON: REDnode refuses more before it gets here.
+const MOD_CONTEXT_LIMIT = 65536;
+
+function modModel(family) {
+  if (family === undefined || family === null || family === '') return MOD_MODEL;
+  const id = MOD_MODELS[String(family)];
+  if (!id) throw new Error(`REDagent has no model family "${family}": use "sonnet" (the default), "opus" or "haiku".`);
+  return id;
+}
 const DAILY_LIMIT = 0.25;
 const MODS_FILE = join(pkg.dataDir, 'mods.json');
 const PICTURES = ['window_image', 'game_image'].map((t) => KERNEL + t);
@@ -978,7 +990,14 @@ function postMods() {
   channel.post({ type: 'mods', mods: mods.sort((a, b) => (b.recent[0]?.at ?? 0) - (a.recent[0]?.at ?? 0)) });
 }
 
-function modBriefing(from) {
+function modBriefing(from, tools = true) {
+  if (!tools) {
+    return `You are REDagent, powered by Claude, inside Cyberpunk 2077 with REDnode. The REDnode mod "${from.name}" (id ${from.id}) asks you a question for its player, and uses your answer itself.
+- Answer from the question and the context the mod sends: you have no tools here, and everything you need is in them.
+- Follow the format the question asks for exactly, such as JSON. With no format asked, answer briefly in plain text, with no Markdown: the mod uses your words exactly as written.
+- Write only the answer: no preamble, no notes about yourself.
+- If the mod asks for something you cannot do from what it sent, say so in one sentence.`;
+  }
   return `You are REDagent, powered by Claude, inside Cyberpunk 2077 with REDnode. The REDnode mod "${from.name}" (id ${from.id}) asks you a question for its player, and shows your answer in its own window.
 - Answer the question briefly and directly, in plain text: a few sentences unless it needs more. No Markdown (no **, #, backticks or tables): the mod shows your words exactly as written.
 - Write only the answer, after any tool calls. Write nothing before or between tool calls: the mod's player sees every word you write.
@@ -995,25 +1014,38 @@ async function answerMod(req, st) {
   if (!key) throw new Error('REDagent has no API key yet. The player sets it up in the REDagent window.');
   approveKey(key);
   ensureWorkDir();
+  const model = modModel(req.model);
+  const tools = req.tools !== false;
+  let contextJson;
+  if (req.context !== undefined) {
+    contextJson = JSON.stringify(req.context);
+    if (contextJson.length > MOD_CONTEXT_LIMIT) {
+      throw new Error(`The context is ${contextJson.length} characters of JSON; REDagent takes at most ${MOD_CONTEXT_LIMIT}.`);
+    }
+  }
   const mcpServers = {};
-  try {
-    const m = await kernel.mcp();
-    mcpServers.rednode = { type: 'http', url: m.url, headers: m.headers };
-  } catch {
-    // without REDnode's tools: the model and the mod's context only
+  if (tools) {
+    try {
+      const m = await kernel.mcp();
+      mcpServers.rednode = { type: 'http', url: m.url, headers: m.headers };
+    } catch {
+      // without REDnode's tools: the model and the mod's context only
+    }
   }
   const readOnly = new Set([...READ_TOOLS, ...READ_ONLY.filter((t) => st.pictures || !PICTURES.includes(t))]);
   const canUse = async (name, input) => {
+    if (!tools) return { behavior: 'deny', message: 'This question was asked without tools: answer from the question and its context.' };
     if (readOnly.has(name)) return { behavior: 'allow', updatedInput: input };
     if (MOD_READ.includes(name) || (isModTool(name) && (await modToolReads(name)))) return { behavior: 'allow', updatedInput: input };
     if (name === `${KERNEL}apps` && (!input.action || input.action === 'list')) return { behavior: 'allow', updatedInput: input };
     return { behavior: 'deny', message: 'Questions from mods may only read; this tool is not available to them.' };
   };
-  const prompt =
-    req.context === undefined ? req.prompt : `${req.prompt}\n\nContext from the mod (JSON):\n${JSON.stringify(req.context).slice(0, 8000)}`;
+  // The whole context (#54): REDnode refuses one over the limit, so nothing is cut here.
+  const prompt = contextJson === undefined ? req.prompt : `${req.prompt}\n\nContext from the mod (JSON):\n${contextJson}`;
   const stop = new AbortController();
   req.signal.addEventListener('abort', () => stop.abort());
-  console.log(`Question from ${req.from.name}: ${req.prompt.replace(/\s+/g, ' ').slice(0, 80)}`);
+  const family = Object.keys(MOD_MODELS).find((k) => MOD_MODELS[k] === model);
+  console.log(`Question from ${req.from.name} (${family}${tools ? '' : ', no tools'}): ${req.prompt.replace(/\s+/g, ' ').slice(0, 80)}`);
   // Only the last turn's text is the answer. A turn that ends in a tool call may start with a
   // note ("Need player ref."), so a turn's text is held back until it is long enough to be an
   // answer or the turn ends without a tool call; a held note is dropped at its tool call.
@@ -1038,16 +1070,16 @@ async function answerMod(req, st) {
       cwd: APPS_DIRS[0],
       additionalDirectories: APPS_DIRS.slice(1),
       settingSources: [],
-      systemPrompt: modBriefing(req.from),
-      model: MOD_MODEL,
-      tools: READ_TOOLS,
+      systemPrompt: modBriefing(req.from, tools),
+      model,
+      tools: tools ? READ_TOOLS : [],
       permissionMode: 'default',
       canUseTool: canUse,
       hooks: { PreToolUse: [fileGuard] },
       mcpServers,
       includePartialMessages: true,
       abortController: stop,
-      maxTurns: 8,
+      maxTurns: tools ? 8 : 1,
     },
   })) {
     if (m.type === 'stream_event') {
@@ -1072,7 +1104,7 @@ async function answerMod(req, st) {
   }
   st.today += cost;
   st.total += cost;
-  st.recent = [{ at: Date.now(), prompt: req.prompt.replace(/\s+/g, ' ').slice(0, 120), cost }, ...st.recent].slice(0, 5);
+  st.recent = [{ at: Date.now(), prompt: req.prompt.replace(/\s+/g, ' ').slice(0, 120), cost, model: family, tools }, ...st.recent].slice(0, 5);
   saveMods();
   postMods();
   console.log(`Answered ${req.from.name} for $${cost.toFixed(4)} (today $${st.today.toFixed(3)} of $${st.limit.toFixed(2)})`);
@@ -1084,6 +1116,7 @@ agent.serve(async (req) => {
   saveMods();
   if (st.paused) throw new Error('The player has paused this mod in REDagent.');
   if (st.today >= st.limit) throw new Error(`This mod has reached its daily limit of $${st.limit.toFixed(2)} in REDagent.`);
+  modModel(req.model); // an unknown family is refused before the question waits in line
   const run = modQueue.then(() => {
     if (req.signal.aborted) throw new Error('Stopped.');
     return answerMod(req, st);

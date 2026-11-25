@@ -86,9 +86,9 @@ Other mods can ask REDagent questions and show you the answers, for example a mo
 
 | What | How it works |
 |---|---|
-| What a mod's question may do | Only read: logs, the game state, the game API, overlay windows' text and your mods' files. It never changes your files or your game |
+| What a mod's question may do | Only read: logs, the game state, the game API, overlay windows' text and your mods' files. It never changes your files or your game. A mod can also ask for an answer with no tools at all, from what it sent alone, which is quicker and cheaper |
 | Pictures | Pictures of windows and of your screen are off for every mod. Switch **Pictures** on for a mod in the Mods view if you want it |
-| Model | Sonnet 5.5, whatever your chat uses, to keep it cheap |
+| Model | Sonnet 5.5, whatever your chat uses, to keep it cheap, unless the mod asks for Opus (harder questions) or Haiku (quick ones). The Mods view shows each question's model when it is not Sonnet, and "no tools" when it had none |
 | Cost | Each mod has a daily limit, $0.25 unless you change it. Past it, the mod's questions are refused until the next day |
 | Control | **Chats**, then the **Mods** tab, lists each mod that has asked: what it spent today and in all, its limit (type a new one and press **Set**), **Paused** to stop it, **Pictures**, and its last questions |
 

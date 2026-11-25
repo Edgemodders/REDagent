@@ -236,7 +236,8 @@ function showMods(m) {
     controls.append(limit, toggle('Paused', mod.paused, 'paused'), toggle('Pictures', mod.pictures, 'pictures'));
     row.append(controls);
     for (const r of mod.recent.slice(0, 3)) {
-      row.append(div('recent', `${new Date(r.at).toLocaleTimeString()} &middot; $${r.cost.toFixed(3)} &middot; ${esc(r.prompt)}`));
+      const how = [r.model && r.model !== 'sonnet' ? r.model : '', r.tools === false ? 'no tools' : ''].filter(Boolean).join(', ');
+      row.append(div('recent', `${new Date(r.at).toLocaleTimeString()} &middot; $${r.cost.toFixed(3)}${how ? ` &middot; ${esc(how)}` : ''} &middot; ${esc(r.prompt)}`));
     }
     list.append(row);
   }
