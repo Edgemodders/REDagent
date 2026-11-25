@@ -18,6 +18,8 @@ How to keep it (the Edgemodders convention):
 
 ### Changed
 
+- **A mod's daily limit is $2.00 by default** (was $0.25), so a mod that asks on its own, such as a social feed, does not stop working within the first hour. A mod still on $0.25 that you never set moves to $2.00 once; a limit you set stays as it is. Change it in **Chats**, **Mods**.
+
 - **A mod's context is sent whole**, up to 65,536 characters of JSON (REDnode refuses more), where REDagent cut it at 8,000 characters before.
 
 ## 0.4.4 (2026-11-15)

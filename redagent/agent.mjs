@@ -900,7 +900,10 @@ channel.on(async (msg) => {
       case 'mod-settings': {
         const st = modSettings[msg.id] && modState(msg.id);
         if (st) {
-          if (Number.isFinite(Number(msg.limit)) && Number(msg.limit) >= 0) st.limit = Math.min(100, Number(msg.limit));
+          if (Number.isFinite(Number(msg.limit)) && Number(msg.limit) >= 0) {
+            st.limit = Math.min(100, Number(msg.limit));
+            st.limitSet = true;
+          }
           if (typeof msg.paused === 'boolean') st.paused = msg.paused;
           if (typeof msg.pictures === 'boolean') st.pictures = msg.pictures;
           saveMods();
@@ -947,8 +950,8 @@ if (latest) {
 // names another family (REDnode #54), with read-only tools (none when the mod asks
 // with tools: false): never files written or the game changed. Pictures (window and
 // game screen) are off unless the player switches them on for that mod. Each mod
-// has a daily spending limit, $0.25 unless the player sets another, and can be
-// paused, in the Mods view.
+// has a daily spending limit, $2.00 unless the player sets another (it was $0.25
+// before 0.4.6), and can be paused, in the Mods view.
 
 // #54: a mod names a model family, never an id; each maps to the newest model of it.
 const MOD_MODELS = { sonnet: 'claude-sonnet-5-5', opus: 'claude-opus-5-5', haiku: 'claude-haiku-5-5' };
@@ -962,7 +965,9 @@ function modModel(family) {
   if (!id) throw new Error(`REDagent has no model family "${family}": use "sonnet" (the default), "opus" or "haiku".`);
   return id;
 }
-const DAILY_LIMIT = 0.25;
+const DAILY_LIMIT = 2;
+// The default before 0.4.6. A mod still on it, never set by the player, moves to the new one.
+const OLD_DAILY_LIMIT = 0.25;
 const MODS_FILE = join(pkg.dataDir, 'mods.json');
 const PICTURES = ['window_image', 'game_image'].map((t) => KERNEL + t);
 
@@ -973,6 +978,19 @@ try {
   // none yet
 }
 const saveMods = () => writeFileSync(MODS_FILE, JSON.stringify(modSettings, null, 2));
+{
+  // A limit the player set is marked limitSet (0.4.6 on); one left at the old default moves up, once.
+  const raised = Object.entries(modSettings).filter(([, st]) => st && !st.limitSet && st.limit === OLD_DAILY_LIMIT);
+  for (const [, st] of raised) st.limit = DAILY_LIMIT;
+  if (raised.length) {
+    try {
+      saveMods();
+    } catch {
+      // kept in memory; written with the next change
+    }
+    console.log(`Daily limit raised from $${OLD_DAILY_LIMIT.toFixed(2)} to $${DAILY_LIMIT.toFixed(2)} for ${raised.map(([id]) => id).join(', ')} (never set by the player)`);
+  }
+}
 const localDay = () => new Date().toLocaleDateString('sv'); // YYYY-MM-DD, the player's own day
 
 function modState(id, name) {
