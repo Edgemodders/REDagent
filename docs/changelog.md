@@ -11,15 +11,24 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+## 0.4.6 (2026-11-25)
+
+<!-- nexus
+Needs: REDnode 0.65.3 or later; 0.73.1 or later for mods' model choice and answers with no tools
+New: Continue in VS Code hands a chat to Claude Code with EDGEchat's /edge:continue
+New: mods can ask for an answer with no tools, and pick Sonnet, Opus or Haiku
+Changed: a mod's daily limit is $2.00 by default (was $0.25); limits you set stay
+Changed: a mod's question now carries its whole context, up to 64 KB
+-->
+
 ### New
 
-- **Mods choose how REDagent answers** (REDnode #54: https://github.com/Edgemodders/REDnode/issues/54, with REDnode 0.72.0): a mod's `agent.ask` can say `tools: false`, so REDagent answers from the question and context alone, quicker and cheaper, and `model`: `"sonnet"` (the default), `"opus"` or `"haiku"`, each the newest model of its family; another name is refused. The Mods view shows a question's model and "no tools" beside its cost.
+- **Mods choose how REDagent answers** (REDnode #54: https://github.com/Edgemodders/REDnode/issues/54, with REDnode 0.73.1): a mod's `agent.ask` can say `tools: false`, so REDagent answers from the question and context alone, quicker and cheaper, and `model`: `"sonnet"` (the default), `"opus"` or `"haiku"`, each the newest model of its family; another name is refused. The Mods view shows a question's model and "no tools" beside its cost.
 - **Continue in VS Code**: the chat's **VS Code** button writes the chat as a handoff file, puts `/edge:continue` on the clipboard, and says where the file is. In Claude Code with EDGEchat, `/edge:continue` picks the chat up in the editor (EDGEchat's part: https://github.com/Edgemodders/EDGEchat). The handoff holds what you asked, REDagent's answers and tool calls, the files it changed and the mods involved; never your key.
 
 ### Changed
 
 - **A mod's daily limit is $2.00 by default** (was $0.25), so a mod that asks on its own, such as a social feed, does not stop working within the first hour. A mod still on $0.25 that you never set moves to $2.00 once; a limit you set stays as it is. Change it in **Chats**, **Mods**.
-
 - **A mod's context is sent whole**, up to 65,536 characters of JSON (REDnode refuses more), where REDagent cut it at 8,000 characters before.
 
 ## 0.4.4 (2026-11-15)
