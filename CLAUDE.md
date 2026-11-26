@@ -24,6 +24,7 @@ REDagent is an in-game assistant for REDnode mods, powered by Claude. Read [docs
 
 The same as REDnode's:
 
+- **Writing files on this PC:** follow the section of that name in REDnode's `CLAUDE.md` (Windows, Git Bash, PowerShell 5.1): Write and Edit for file content, never a heredoc, `node -e`, `python -c` or `sed`; read the diff after a scripted change; files are LF (`.gitattributes`).
 - **Commits:** straight to `main` and push, in small logical commits, after agreeing the plan in chat.
 - **Git identity:** set per repo to `CyberbuildsAI` with the GitHub no-reply email. Never change the global identity.
 - **README at each release (the owner's rule, 2026-11-03; the same in every Edgemodders repo):** before a release run, update `README.md`'s status line (`**Status: <version> released on <date>**, for game 2.5 ...`, with what is new worth a line and the REDnode it needs) and draw the status badge again (`tools/brand/badges.py`: the `status` entry, then `python -I tools/brand/badges.py docs/assets/brand/badges`; the README's `<img alt>` too). The version is `redagent/package.json`'s. The Release zip workflow stops before building when they do not say it (`tools/release/readme-check.mjs`, a copy of REDnode's kept identical: copy it again from REDnode when it changes). The README said 0.3.2 through 0.4.1's release before this rule.
