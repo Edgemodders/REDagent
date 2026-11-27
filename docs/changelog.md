@@ -11,6 +11,10 @@ How to keep it (the Edgemodders convention):
 
 ## Unreleased
 
+### Fixed
+
+- REDagent's window has a ✕ close button in its title bar, as REDnode's other windows have. It switches REDagent off; turn it on again in the launcher.
+
 ## 0.4.6 (2026-11-25)
 
 <!-- nexus
